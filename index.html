@@ -39,7 +39,7 @@ a{color:var(--accent)}
 </head>
 <body>
 <header><div class="wrap"><b>KI-Sprachunterricht</b>
-  <nav><a href="#angebot">Angebot</a><a href="#preise">Preise</a><a href="#kontakt">Kontakt</a><a href="#impressum">Impressum</a></nav></div></header>
+  <nav><a href="#angebot">Angebot</a><a href="#preise">Preise</a><a href="#kontakt">Kontakt</a><a href="#impressum">Impressum</a><a href="#datenschutz">Datenschutz</a><a href="#privacy">Privacy</a></nav></div></header>
 
 <div class="wrap">
   <div class="hero">
@@ -56,7 +56,7 @@ a{color:var(--accent)}
       <div><b>Situationsdialoge &amp; Filmszenen</b>Alltagsszenen (Restaurant, Reise, Beruf) und das Nachsprechen bekannter Filmszenen mit verteilten Rollen.</div>
       <div><b>KI-Gesprächsbegleitung</b>Außerdem: entlastende Gespräche im Alltag mit einer KI. Dies ist <u>keine</u> Psychotherapie und keine medizinische Leistung; in Notfällen bitte den Notruf 112 wählen.</div>
     </div>
-    <p class="muted">Alle Lehrkräfte sind KI-Systeme; das wird zu Beginn jedes Gesprächs gesagt. Genutzt wird die App im Browser (Smartphone oder Computer), Mikrofon erforderlich, Kamera optional. Es werden keine physischen Waren verkauft.</p>
+    <p class="muted">Alle Lehrkräfte sind KI-Systeme; das wird zu Beginn jedes Gesprächs gesagt. Genutzt wird die App im Browser (Smartphone oder Computer) oder als Android-App, Mikrofon erforderlich, Kamera optional. Es werden keine physischen Waren verkauft.</p>
     <p class="zh">中文：AI 外语私教——在手机或电脑浏览器里和 AI 老师一对一实时语音上课，讲义实时上屏；词根词缀记单词、情景对话、电影配音。另有 AI 情感倾诉陪伴（不是心理治疗）。目前为内测阶段。</p>
   </section>
 
@@ -101,16 +101,33 @@ a{color:var(--accent)}
 
   <section id="datenschutz">
     <h2>Datenschutz (Kurzfassung)</h2>
-    <p>Verantwortlich: Haoyang Wu (Kontakt siehe Impressum).</p>
+    <p>Verantwortlich: Haoyang Wu (Kontakt siehe Impressum). Gilt für die Web-App und die Android-App „外語私教“.</p>
     <ul>
-      <li><b>Konto:</b> Ihre Telefonnummer wird nur als Prüfsumme (Hash) und gekürzt angezeigt gespeichert.</li>
-      <li><b>Unterricht:</b> Ihre Sprache wird in Echtzeit in Text umgewandelt (Deepgram, USA) und die Antworten der KI (Anthropic, USA) werden in Sprache umgewandelt (Cartesia, USA). Audio wird nicht aufgezeichnet; die Gesprächsabschrift wird als Text gespeichert, um den Unterricht fortzusetzen (Lernstand, Vokabelheft).</li>
+      <li><b>Konto:</b> Login per E-Mail und Passwort oder als Gast. E-Mail-Adresse bzw. Telefonnummer werden nur als Prüfsumme (Hash) gespeichert und gekürzt angezeigt; das Passwort nur als scrypt-Hash.</li>
+      <li><b>Unterricht:</b> Ihre Sprache wird in Echtzeit in Text umgewandelt (Alibaba Cloud, Singapur; ersatzweise Deepgram, USA). Die Antworten der KI-Lehrkraft und Aussprachehinweise (Lautschrift, Kana, Umschrift) erzeugt Anthropic (USA); die Sprachausgabe Cartesia (USA). Beim Nachsprechen wird der jeweilige Satz als kurzer Audioausschnitt zur Prüfung an Alibaba Cloud übermittelt. Audio wird von uns nicht aufgezeichnet oder gespeichert; die Gesprächsabschrift wird als Text gespeichert, um den Unterricht fortzusetzen (Lernstand, Vokabelheft, Notizen der Lehrkraft).</li>
       <li><b>Kamera (optional):</b> Einzelbilder werden kurzzeitig zur Anpassung des Unterrichts an die KI übermittelt und nicht gespeichert.</li>
-      <li><b>Zahlung:</b> über Stripe (Irland/USA); wir erhalten keine Kartendaten.</li>
-      <li><b>Verbindung:</b> über Cloudflare (USA). Übermittlungen in die USA erfolgen auf Grundlage der EU-Standardvertragsklauseln bzw. des EU-US Data Privacy Framework.</li>
+      <li><b>Bewertungen und Meldungen:</b> Ihre Bewertung nach dem Unterricht und Meldungen unangemessener KI-Antworten (Schaltfläche „舉報“) werden gespeichert, um die Lehrkräfte zu verbessern.</li>
+      <li><b>Zahlung:</b> über Stripe (Irland/USA); wir erhalten keine Kartendaten. In der Android-App werden derzeit keine Käufe angeboten.</li>
+      <li><b>Verbindung und Hosting:</b> Die App-Seite liegt bei GitHub Pages (USA), die Verbindung läuft über Cloudflare (USA). Übermittlungen in Drittländer erfolgen auf Grundlage der EU-Standardvertragsklauseln bzw. des EU-US Data Privacy Framework.</li>
       <li><b>Training:</b> Gespräche werden nur dann zur Verbesserung der KI verwendet, wenn Sie dem gesondert zugestimmt haben; die Zustimmung ist jederzeit widerruflich.</li>
+      <li><b>Konto löschen:</b> in der App unter „帳戶 → 刪除帳戶“ oder per E-Mail (siehe <a href="delete.html">Konto löschen</a>). Gelöscht werden Konto, Guthaben, Vokabelheft, Lernstand, Gesprächsabschriften und Notizen; Abrechnungsdaten bewahren wir pseudonymisiert auf, solange das Steuerrecht es verlangt (bis zu 10 Jahre).</li>
     </ul>
     <p class="muted">Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit und Widerspruch sowie auf Beschwerde bei einer Datenschutzaufsichtsbehörde. Rechtsgrundlagen: Art. 6 Abs. 1 lit. b DSGVO (Vertrag) und lit. a (Einwilligung).</p>
+  </section>
+
+  <section id="privacy">
+    <h2>Privacy policy (English summary)</h2>
+    <p>Controller: Haoyang Wu, Bodelschwinghstr. 10, 74182 Obersulm, Germany · <a href="mailto:haoyang.wu@outlook.com">haoyang.wu@outlook.com</a>. Applies to the web app and the Android app “外語私教” (AI language tutor).</p>
+    <ul>
+      <li><b>Account:</b> email + password, or guest mode. Email/phone are stored only as a hash and shown masked; passwords only as a scrypt hash.</li>
+      <li><b>Lessons:</b> microphone audio is transcribed in real time (Alibaba Cloud, Singapore; fallback Deepgram, USA). Tutor replies and pronunciation hints are generated by Anthropic (USA); speech output by Cartesia (USA). For read-along practice the spoken sentence is sent as a short audio clip to Alibaba Cloud for checking. We do not record or store audio. Lesson transcripts are stored as text to continue your lessons (progress, vocabulary notebook, tutor notes).</li>
+      <li><b>Camera (optional):</b> occasional still frames are sent to the AI to adapt the lesson and are not stored.</li>
+      <li><b>Ratings and reports:</b> lesson ratings and reports of inappropriate AI output (the “舉報” button) are stored to improve the tutors.</li>
+      <li><b>Payments:</b> web only, via Stripe; we never receive card data. The Android app currently offers no purchases.</li>
+      <li><b>Hosting:</b> the app page is served by GitHub Pages (USA); connections go through Cloudflare (USA).</li>
+      <li><b>Account deletion:</b> in the app (Account → Delete account) or by email — see <a href="delete.html">Delete your account</a>. We delete the account, balance, vocabulary, progress, transcripts and tutor notes; billing records are kept pseudonymised as required by tax law (up to 10 years).</li>
+      <li>You may request access, correction or deletion of your data at any time by email.</li>
+    </ul>
   </section>
 </div>
 <footer>© 2026 Haoyang Wu · KI-Sprachunterricht</footer>

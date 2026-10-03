@@ -235,7 +235,7 @@ window.onerror = function (msg, src, line) {
 
 <div id="login" hidden><div class="lg-wrap">
   <div class="lg-top">
-    <div class="lg-brand"><img src="/app/icon-192.png" alt=""><div><b>外语私教</b><span>AI 外语一对一</span></div></div>
+    <div class="lg-brand"><img src="icon-192.png" alt=""><div><b>外语私教</b><span>AI 外语一对一</span></div></div>
     <button class="lg-zh" id="zhBtn" data-noconv>繁體</button>
   </div>
   <div class="lg-hero">
@@ -1156,7 +1156,8 @@ $("#repX").onclick = () => $("#report").hidden = true;
 $("#repGo").onclick = async () => {
   if (!repWhy) return alert("请选一个原因");
   try {
-    await api("/app/api/report", {token: auth.token, call: (C && C.callId) || "", text: $("#repText").textContent, reason: repWhy, note: $("#repNote").value});
+    const note = $("#repNote").value.trim();   // 共用接口（hotline/appgw.py）：text = 哪里不妥，quote = AI 的原话
+    await api("/app/api/report", {token: auth.token, call: (C && C.callId) || "", text: repWhy + (note ? "：" + note : ""), quote: $("#repText").textContent});
     $("#report").hidden = true; banner("已收到举报，谢谢！我们会检查这段内容。", true);
   } catch (e) { alert(e.message); }
 };

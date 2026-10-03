@@ -80,7 +80,9 @@ input{font:inherit;width:100%;padding:12px;border-radius:12px;border:1px solid v
 .lg-langs span{background:rgba(255,255,255,.15);border-radius:999px;padding:3px 10px;font-size:12.5px}
 .lg-faces{display:flex;align-items:center;margin:0 0 22px;min-height:46px}
 .lg-faces img{width:44px;height:44px;border-radius:50%;border:2px solid #fff;object-fit:cover;margin-left:-11px;background:#c9d2f5}
-.lg-faces img:first-child{margin-left:0}
+.lg-faces img:first-child,.lg-faces .lgf:first-child{margin-left:0}
+.lg-faces .lgf{width:44px;height:44px;border-radius:50%;border:2px solid #fff;overflow:hidden;margin-left:-11px;flex:none;background:#c9d2f5}
+.lg-faces .lgf svg,.av svg{width:100%;height:100%;display:block}
 .lg-faces span{margin-left:10px;font-size:13px;opacity:.92}
 .lg-card{background:#fff;color:#1d2433;border-radius:20px;padding:18px;box-shadow:0 18px 40px rgba(16,24,64,.35)}
 .lg-card h2{margin:0 0 12px;font-size:18px}
@@ -414,7 +416,14 @@ async function api(path, body){
   const j = await r.json(); if (!r.ok) throw new Error(j.error || r.status); return j;
 }
 function save(){ try { localStorage.setItem("tu_auth", JSON.stringify(auth)); } catch (e) {} }
-function avatarHTML(a){ return a && /^(https?:|\/app\/avatar\/)/.test(a) ? `<img src="${esc(U(a))}">` : esc(a || "🙂"); }
+// 老师照片（thispersondoesnotexist 的测试图）商用授权不清：先全用卡通头像。换成有授权的照片后把 CARTOON 改成 false
+const CARTOON = true;
+const isPhoto = a => typeof a === "string" && /^(https?:|\/app\/avatar\/)/.test(a);
+function avatarHTML(t){
+  t = typeof t === "string" ? {avatar: t} : (t || {});
+  if (!CARTOON && isPhoto(t.avatar)) return `<img src="${esc(U(t.avatar))}">`;
+  return t.name ? avatarSVG(t) : esc(t.avatar || "🙂");
+}
 
 async function boot(){
   if (!auth.token) return show("login");
@@ -509,8 +518,9 @@ function fullPhone(){
 }
 function loadShowcase(){
   fetch(U("/app/api/showcase")).then(r => r.json()).then(s => {
-    const ps = (s.teachers || []).filter(t => /^(https?:|\/app\/avatar\/)/.test(t.avatar || ""));
-    $("#lgFaces").innerHTML = ps.slice(0, 7).map(t => `<img src="${esc(U(t.avatar))}" alt="${esc(t.name)}" loading="lazy">`).join("") +
+    const ps = CARTOON ? (s.teachers || []) : (s.teachers || []).filter(t => isPhoto(t.avatar));
+    $("#lgFaces").innerHTML = ps.slice(0, 7).map(t => CARTOON ? `<span class="lgf" title="${esc(t.name)}">${avatarSVG(t)}</span>`
+      : `<img src="${esc(U(t.avatar))}" alt="${esc(t.name)}" loading="lazy">`).join("") +
       `<span>${(s.teachers || []).length} 位 AI 老师随时开课</span>`;
   }).catch(() => {});
 }
@@ -707,7 +717,7 @@ function pickTeacher(lang){   // 词根课选哪位老师上：同一门语言�
   const rank = t => (t.rate > 0 ? 2 : 0) - ((t.tags || []).join(" ").includes("词根") ? 1 : 0);
   const ts = ME.counselors.filter(t => t.lang === lang).sort((a, b) => rank(a) - rank(b));
   $("#pickTitle").textContent = `${LANG[lang] || lang} 词根课 · 选老师`;
-  $("#pickList").innerHTML = ts.map(t => `<div class="prow"><div class="av">${avatarHTML(t.avatar)}</div>
+  $("#pickList").innerHTML = ts.map(t => `<div class="prow"><div class="av">${avatarHTML(t)}</div>
     <div class="info"><b>${esc(t.name)}</b><small>${esc((t.tags || []).slice(0, 3).join(" · "))}</small></div>
     <button class="small" data-t="${t.id}" data-n="${esc(t.name)}" data-a="${esc(t.avatar)}" data-r="${t.rate}">${ME.guest && t.rate > 0 ? "注册后<br>可上" : "上课"}${ME.free || (ME.guest && t.rate > 0) ? "" : `<br><small>${t.rate > 0 ? `¥${yuan(t.rate)}/分` : "免费"}</small>`}</button></div>`).join("")
     || `<div class="muted">这门语言暂时没有老师</div>`;
@@ -747,8 +757,8 @@ function renderHome(){
   const best = picking && list.length && score(list[0]) > 0 ? list[0].id : "";
   $("#pickHint").textContent = best ? "已把最合适的排在前面" : "";
   $("#tlist").innerHTML = list.map(t => `
-    <div class="t ${t.id === best ? "best" : ""}"><div class="av">${avatarHTML(t.avatar)}</div>
-      <div class="info"><div><b>${esc(t.name)}</b> <span class="muted">${esc(LANG[t.lang] || "")} · ${esc(t.area)}</span></div>
+    <div class="t ${t.id === best ? "best" : ""}"><div class="av">${avatarHTML(t)}</div>
+      <div class="info"><div><b>${esc(t.name)}</b> <span class="muted">${esc(LANG[t.lang] || "")} · ${esc(String(t.area || "").replace(/^[^·]{1,8}·\s*/, ""))}</span></div>
         <div>${(t.tags || []).map(x => `<span class="tag">${esc(x)}</span>`).join("")}</div>
         <div class="muted" style="margin-top:4px">${esc(t.style)}</div></div>
       <button class="small" data-t="${t.id}" data-n="${esc(t.name)}" data-a="${esc(t.avatar)}" data-r="${t.rate}">${ME.guest && t.rate > 0 ? "注册后<br>可上" : "上课"}${ME.free || (ME.guest && t.rate > 0) ? "" : `<br><small>${t.rate > 0 ? `¥${yuan(t.rate)}/分` : "免费"}</small>`}</button></div>`).join("") || `<div class="muted">没有这门语言的老师</div>`;
@@ -771,7 +781,8 @@ function fail(msg){ rlog("失败：" + msg); alert(msg + "。如果是在微信�
 async function startClass(id, name, avatar, opts = {}){
   if (C) return;
   show("room");
-  $("#tav").innerHTML = avatarHTML(avatar); $("#tname").textContent = name; $("#tstate").textContent = "准备上课";
+  const tinfo0 = (ME && ME.counselors || []).find(t => t.id === id) || {name, avatar};
+  $("#tav").innerHTML = avatarHTML(tinfo0); $("#tname").textContent = name; $("#tstate").textContent = "准备上课";
   $("#bcontent").innerHTML = ""; $("#hist").innerHTML = ""; $("#keys").innerHTML = ""; $("#subs").innerHTML = ""; $("#prep").hidden = false;
   $("#prepText").textContent = `${name} 正在备课…`;
   const uid = Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -791,7 +802,7 @@ async function startClass(id, name, avatar, opts = {}){
   const dl = C.ctx.createDelay(1); dl.delayTime.value = 0.08; C.an.connect(dl); dl.connect(C.ctx.destination);
   const tinfo = (ME.counselors || []).find(t => t.id === id) || {};
   C.teacher = {name, avatar: tinfo.avatar || avatar, gender: tinfo.gender || "女", avatar3d: tinfo.avatar3d || "",
-               videos: tinfo.videos || []};
+               videos: tinfo.videos || [], lang: tinfo.lang, tags: tinfo.tags, area: tinfo.area, style: tinfo.style};
   setTV(TV_ON); requestAnimationFrame(animate);
   try {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error("这个浏览器不让网页用麦克风，请用 Safari 或 Chrome 打开");
@@ -843,26 +854,54 @@ function stopPlayback(){ if (!C) return; C.sources.forEach(s => { try { s.stop()
 let TV_ON = true; try { TV_ON = localStorage.getItem("tu_tv") !== "0"; } catch (e) {}
 let M3P = null;
 function hashStr(s){ let h = 7; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) | 0; return Math.abs(h); }
-function avatarSVG(name, gender){
-  const h = hashStr(name || "老师");
-  const skin = ["#f6d7c3", "#f1c9ae", "#eac0a0", "#f8dccb", "#d9a98a"][h % 5];
-  const hair = ["#2b211c", "#3a2a22", "#1d1a19", "#4a3426", "#a8743f", "#d9b36c"][(h >> 2) % 6];
-  const cloth = ["#3b5bdb", "#4f6d8a", "#6b8f71", "#8a6aa8", "#c08a3e", "#3f5f6f"][(h >> 4) % 6];
-  const bg = ["#e7ecff", "#dfe8ef", "#e4eee2", "#ece4f2", "#f4ead8"][(h >> 6) % 5];
-  const female = gender !== "男";
-  const back = female ? `<path d="M54 96 Q46 38 100 32 Q154 38 146 96 L152 162 Q100 174 48 162 Z" fill="${hair}"/>` : "";
-  const top = female
-    ? `<path d="M60 90 Q60 44 100 42 Q140 44 140 90 Q128 64 102 62 Q76 66 60 90 Z" fill="${hair}"/>`
-    : `<path d="M62 88 Q58 44 100 40 Q142 44 138 88 Q134 62 112 60 Q90 70 70 64 Q64 74 62 88 Z" fill="${hair}"/>`;
+// 卡通老师：按名字固定长相；头发 / 肤色看教哪种语言，发型三选一，「教授 / 严谨 / 绅士」戴眼镜
+function avatarSVG(t, gender){
+  t = typeof t === "string" ? {name: t, gender} : (t || {});
+  const name = t.name || "老师", h = hashStr(name), female = t.gender !== "男";
+  const hint = [name, t.area || "", t.style || "", ...(t.tags || [])].join(" ");
+  const asian = ["ja", "ko", "zh"].includes(t.lang) || /[一-鿿]/.test(name);
+  const pick = (arr, k) => arr[(h >> k) % arr.length];
+  const skin = pick(asian ? ["#f7dcc8", "#f3d2bb", "#efcab0"] : ["#f8dccb", "#f1c9ae", "#e6b896", "#c98e6b", "#9c6a52"], 0);
+  const hair = pick(asian ? ["#1f1a18", "#2b211c", "#3a2a22", "#4b3326"] : ["#2b211c", "#4a3426", "#6e4326", "#a8743f", "#d9b36c", "#8c3b22"], 3);
+  const cloth = pick(["#3b5bdb", "#4f6d8a", "#4c8a6b", "#8a6aa8", "#c0703e", "#2f6f8f", "#b5485d"], 6);
+  const bg = pick(["#e7ecff", "#dfeef0", "#e6f2e4", "#efe6f6", "#f7ecdc", "#fde8ea"], 9);
+  const style = (h >> 12) % 3;
+  const glasses = /教授|严谨|嚴謹|绅士|紳士|讲得透|講得透/.test(hint);
+  const shade = "rgba(0,0,0,.08)";
+  let back = "", front = "";
+  if (female && style === 0) {        // 长发
+    back = `<path d="M56 100 Q50 40 100 34 Q150 40 144 100 L150 172 Q100 184 50 172 Z" fill="${hair}"/>`;
+    front = `<path d="M60 92 Q62 46 100 44 Q138 46 140 92 Q130 66 108 62 Q84 70 70 74 Q64 80 60 92 Z" fill="${hair}"/>`;
+  } else if (female && style === 1) { // 短发波波头
+    back = `<path d="M57 98 Q52 42 100 36 Q148 42 143 98 L145 136 Q138 142 128 137 L72 137 Q62 142 55 136 Z" fill="${hair}"/>`;
+    front = `<path d="M60 90 Q64 48 100 46 Q136 48 140 90 Q120 58 90 64 Q72 72 60 90 Z" fill="${hair}"/>`;
+  } else if (female) {                // 丸子头
+    back = `<circle cx="100" cy="38" r="17" fill="${hair}"/>`;
+    front = `<path d="M60 92 Q58 50 100 46 Q142 50 140 92 Q132 70 100 66 Q68 70 60 92 Z" fill="${hair}"/>`;
+  } else if (style === 0) {           // 短发
+    front = `<path d="M62 86 Q60 46 100 42 Q140 46 138 86 Q134 64 112 62 Q90 70 70 66 Q64 74 62 86 Z" fill="${hair}"/>`;
+  } else if (style === 1) {           // 侧分
+    front = `<path d="M62 88 Q58 44 104 42 Q142 46 138 84 Q130 60 96 60 Q78 62 70 72 Q64 78 62 88 Z" fill="${hair}"/>` +
+            `<path d="M104 44 Q96 52 92 60" stroke="${shade}" stroke-width="2" fill="none"/>`;
+  } else {                            // 卷发
+    front = `<path d="M60 88 Q54 60 66 52 Q66 38 84 40 Q92 30 106 36 Q122 30 128 44 Q144 48 140 62 Q146 74 138 88 Q134 66 100 62 Q70 64 60 88 Z" fill="${hair}"/>`;
+  }
+  const lens = glasses ? `<g fill="rgba(255,255,255,.18)" stroke="#2b2b2b" stroke-width="2.4"><rect x="72" y="87" width="24" height="18" rx="7"/><rect x="104" y="87" width="24" height="18" rx="7"/><path d="M96 95 L104 95" fill="none"/></g>` : "";
+  const earring = female && (h >> 15) % 2 ? `<circle cx="62" cy="110" r="3" fill="#f2c94c"/><circle cx="138" cy="110" r="3" fill="#f2c94c"/>` : "";
   return `<svg viewBox="0 10 200 230" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-    <rect y="0" width="200" height="240" fill="${bg}"/>${back}
-    <path d="M24 240 Q30 150 100 146 Q170 150 176 240 Z" fill="${cloth}"/>
+    <rect y="0" width="200" height="240" fill="${bg}"/><circle cx="100" cy="112" r="92" fill="#fff" opacity=".35"/>${back}
+    <path d="M22 240 Q28 150 100 146 Q172 150 178 240 Z" fill="${cloth}"/>
+    <path d="M84 148 L100 170 L116 148 Z" fill="#fff" opacity=".9"/>
     <rect x="88" y="118" width="24" height="32" rx="10" fill="${skin}"/>
-    <ellipse cx="100" cy="94" rx="38" ry="44" fill="${skin}"/>${top}
-    <g class="eyes"><ellipse cx="85" cy="96" rx="4" ry="5" fill="#2a211d"/><ellipse cx="115" cy="96" rx="4" ry="5" fill="#2a211d"/></g>
-    <path d="M77 85 Q85 81 92 84 M108 84 Q115 81 123 85" stroke="${hair}" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-    <circle cx="77" cy="110" r="6" fill="#e9a6a0" opacity=".35"/><circle cx="123" cy="110" r="6" fill="#e9a6a0" opacity=".35"/>
-    <ellipse class="mouth" cx="100" cy="118" rx="8" ry="2" fill="#a8473f"/></svg>`;
+    <ellipse cx="62" cy="98" rx="6" ry="9" fill="${skin}"/><ellipse cx="138" cy="98" rx="6" ry="9" fill="${skin}"/>${earring}
+    <ellipse cx="100" cy="94" rx="38" ry="44" fill="${skin}"/>${front}
+    <g class="eyes"><ellipse cx="85" cy="96" rx="4.2" ry="5.2" fill="#2a211d"/><ellipse cx="115" cy="96" rx="4.2" ry="5.2" fill="#2a211d"/>
+      <circle cx="86.5" cy="94" r="1.4" fill="#fff"/><circle cx="116.5" cy="94" r="1.4" fill="#fff"/></g>
+    <path d="M76 84 Q85 79 93 83 M107 83 Q115 79 124 84" stroke="${hair}" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    <path d="M100 99 Q97 107 101.5 109" stroke="${shade}" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <circle cx="76" cy="110" r="6.5" fill="#ef8f8f" opacity=".28"/><circle cx="124" cy="110" r="6.5" fill="#ef8f8f" opacity=".28"/>
+    <path d="M90 115 Q100 123 110 115" stroke="#a8473f" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <ellipse class="mouth" cx="100" cy="119" rx="7" ry="1" fill="#a8473f"/>${lens}</svg>`;
 }
 function placeTV(){ const t = document.querySelector("#room .top"); if (t) $("#tvid").style.top = (t.getBoundingClientRect().bottom + 8) + "px"; }
 let F2P = null;
@@ -884,8 +923,8 @@ function playLoops(c, list){   // 老师有循环视频：随机挑一段播，�
 function renderTV(){   // 有循环视频就随机播；有照片放静态照片；都没有就卡通头像
   if (!C || !C.teacher) return;
   dropPF();
-  const t = C.teacher, img = t.avatar && /^(https?:|\/app\/avatar\/)/.test(t.avatar);
-  $("#tv2d").innerHTML = img ? `<img src="${esc(U(t.avatar))}" alt="">` : avatarSVG(t.name, t.gender);
+  const t = C.teacher, img = !CARTOON && isPhoto(t.avatar);
+  $("#tv2d").innerHTML = img ? `<img src="${esc(U(t.avatar))}" alt="">` : avatarSVG(t);
   C.mouth = $("#tv2d .mouth"); C.eyes = $("#tv2d .eyes");
   $("#tvname").textContent = t.name;
   if ((t.videos || []).length) { playLoops(C, t.videos); return; }

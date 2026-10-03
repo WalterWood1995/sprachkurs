@@ -1,0 +1,1166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3b5bdb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="description" content="和 AI 外教一对一开口说外语：英语、日语、韩语、德语、法语、西语。词根记单词、情景对话、电影配音。">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>外语私教</title>
+<script>
+// 字形：默认繁体（香港 / 澳门手机用香港用字，其余台湾用语）；用户切过就按用户的。转完之前先不露出页面，免得先闪一下简体。
+(function () {
+  var z = ""; try { z = localStorage.getItem("tu_zh") || ""; } catch (e) {}
+  if (!z) z = /hk|mo/i.test(navigator.language || "") ? "hk" : "tw";
+  window.__ZH = z;
+  if (z !== "s") {
+    document.documentElement.classList.add("zh-wait");
+    setTimeout(function () { document.documentElement.classList.remove("zh-wait"); }, 2500);
+  }
+})();
+</script>
+<style>html.zh-wait body{visibility:hidden}</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js/+esm",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
+  "talkinghead": "https://cdn.jsdelivr.net/gh/met4citizen/TalkingHead@1.7/modules/talkinghead.mjs"
+} }
+</script>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#1d2433;--muted:#6b7385;--line:#e3e7f0;--accent:#3b5bdb;--accent2:#e7ecff;--hot:#f76707;--ok:#2b8a3e;--bad:#e03131;--root:#c2255c}
+@media (prefers-color-scheme:dark){:root{--bg:#11141b;--card:#1b2030;--ink:#e8ebf3;--muted:#9aa3b5;--line:#2c3346;--accent:#748ffc;--accent2:#25305a;--hot:#ff922b;--ok:#69db7c;--bad:#ff6b6b;--root:#f06595}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.page{padding:calc(12px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));max-width:720px;margin:0 auto}
+h1{font-size:22px;margin:8px 0}
+.muted{color:var(--muted);font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0}
+button{font:inherit;border:0;border-radius:12px;padding:10px 14px;background:var(--accent2);color:var(--ink);cursor:pointer}
+button.main{background:var(--accent);color:#fff;width:100%;font-size:17px;padding:14px}
+button.small{padding:6px 11px;font-size:14px}
+input{font:inherit;width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:6px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:14px;cursor:pointer}
+.chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center}
+.stats b{display:block;font-size:22px}
+.t{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line);align-items:flex-start}
+.t:first-child{border-top:0}
+.t.best{background:linear-gradient(90deg,var(--accent2),transparent);border-radius:12px;padding-left:8px}
+.av{width:52px;height:52px;border-radius:50%;background:var(--accent2);display:flex;align-items:center;justify-content:center;font-size:30px;flex:none;overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover}
+.t .info{flex:1;min-width:0}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;background:var(--accent2);margin:2px 4px 0 0}
+/* ---- 教室 ---- */
+#room{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 8px;background:var(--card);border-bottom:1px solid var(--line)}
+.top .av{width:46px;height:46px;font-size:26px;transition:box-shadow .15s}
+.top .av.talk{box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 45%,transparent)}
+.top .who{flex:1}
+#cam{width:84px;height:112px;border-radius:12px;object-fit:cover;background:#000;transform:scaleX(-1)}
+/* ---- 登录页 ---- */
+#login{min-height:100vh;background:linear-gradient(165deg,#1f2a6b 0%,#3b5bdb 58%,#7048e8 100%);color:#fff;
+  padding:calc(14px + env(safe-area-inset-top)) 18px calc(22px + env(safe-area-inset-bottom))}
+.lg-wrap{max-width:460px;margin:0 auto}
+.lg-top{display:flex;justify-content:space-between;align-items:center}
+.lg-brand{display:flex;align-items:center;gap:10px}
+.lg-brand img{width:40px;height:40px;border-radius:11px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.lg-brand b{font-size:18px;display:block;line-height:1.15}
+.lg-brand span{font-size:12px;opacity:.78}
+.lg-zh{background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:6px 13px;font-size:13px}
+.lg-hero h1{font-size:30px;line-height:1.28;margin:30px 0 10px;font-weight:800;letter-spacing:.5px}
+.lg-hero p{opacity:.86;margin:0 0 14px;font-size:15px}
+.lg-langs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 16px}
+.lg-langs span{background:rgba(255,255,255,.15);border-radius:999px;padding:3px 10px;font-size:12.5px}
+.lg-faces{display:flex;align-items:center;margin:0 0 22px;min-height:46px}
+.lg-faces img{width:44px;height:44px;border-radius:50%;border:2px solid #fff;object-fit:cover;margin-left:-11px;background:#c9d2f5}
+.lg-faces img:first-child{margin-left:0}
+.lg-faces span{margin-left:10px;font-size:13px;opacity:.92}
+.lg-card{background:#fff;color:#1d2433;border-radius:20px;padding:18px;box-shadow:0 18px 40px rgba(16,24,64,.35)}
+.lg-card h2{margin:0 0 12px;font-size:18px}
+.lg-phone{display:flex;gap:8px}
+.lg-phone select{flex:none;width:auto;max-width:44%;font:inherit;padding:12px 6px;border-radius:12px;border:1px solid #e3e7f0;background:#f7f8fc;color:#1d2433}
+.lg-phone input{flex:1;min-width:0;background:#fff;color:#1d2433;border-color:#e3e7f0}
+.lg-card button.main{margin-top:12px}
+.lg-card input{margin-top:10px}
+.lg-phone input{margin-top:0}
+.lg-tabs{display:flex;gap:6px;margin:0 0 14px;background:#f1f3fa;border-radius:12px;padding:4px}
+.lg-tabs button{flex:1;background:none;color:#6b7385;padding:9px;font-weight:600}
+.lg-tabs button.on{background:#fff;color:#1d2433;box-shadow:0 1px 4px rgba(16,24,64,.12)}
+.lg-method{display:flex;gap:16px;margin:12px 2px 0;font-size:14px}
+.lg-method button{background:none;padding:2px 0;border-radius:0;color:#8a91a3}
+.lg-method button.on{color:#3b5bdb;font-weight:600;border-bottom:2px solid #3b5bdb}
+.lg-code{display:flex;gap:8px;align-items:center}
+.lg-code input{flex:1;min-width:0;letter-spacing:2px}
+.lg-send{flex:none;margin-top:10px;background:#e7ecff;color:#3b5bdb;padding:12px 12px;font-size:14px;white-space:nowrap}
+.lg-send:disabled{opacity:.55}
+.lg-links{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;font-size:12.5px}
+.lg-links a{color:#3b5bdb;text-decoration:none}
+.lg-links .muted{font-size:11.5px;text-align:right}
+.lg-or{display:flex;align-items:center;gap:10px;color:#9aa1b3;font-size:12px;margin:14px 0 10px}
+.lg-or::before,.lg-or::after{content:"";flex:1;height:1px;background:#e8ebf3}
+.lg-guest{width:100%;background:#f7f8fc;color:#3b5bdb;border:1px solid #dfe4f4;padding:12px;font-weight:600}
+#guestBar{background:linear-gradient(90deg,#fff4e6,#fff);border-color:#ffd8a8}
+#acct{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+#acct .card{max-width:420px;width:100%}
+#acct input{margin-top:8px}
+.lg-agree{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#6b7385;margin-top:12px;line-height:1.5}
+.lg-agree input{width:auto;margin-top:3px;flex:none}
+.lg-agree a{color:#3b5bdb}
+.lg-note{font-size:12px;color:#8a91a3;margin:10px 0 0;text-align:center}
+.lg-feats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 14px}
+.lg-feats div{background:rgba(255,255,255,.12);border-radius:14px;padding:12px;font-size:13px;line-height:1.45}
+.lg-feats b{display:block;font-size:15px;margin-bottom:2px}
+.lg-foot{text-align:center;font-size:12px;opacity:.72;line-height:1.8}
+.lg-foot a{color:#fff}
+/* 老师的视频小窗（数字人）：可关闭，「老师」按钮再打开 */
+#tvid{position:fixed;right:10px;top:84px;width:128px;height:160px;border-radius:16px;overflow:hidden;z-index:5;
+  background:radial-gradient(circle at 50% 35%,#3a3f52,#151824 75%);box-shadow:0 6px 20px rgba(0,0,0,.28)}
+#tvid .x{position:absolute;right:4px;top:4px;z-index:3;width:26px;height:26px;border-radius:50%;padding:0;background:rgba(0,0,0,.5);color:#fff;font-size:14px;line-height:26px}
+#tv2d{position:absolute;inset:0}
+#tv2d svg,#tv2d img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .07s linear}
+#tv3d{position:absolute;inset:0}
+#tvname{position:absolute;left:7px;bottom:5px;z-index:2;font-size:12px;color:#fff;text-shadow:0 1px 3px #000}
+#tvload{position:absolute;left:0;right:0;top:6px;text-align:center;font-size:10px;color:#dfe3ef;z-index:2}
+#boardWrap{flex:1;overflow:auto;padding:12px 14px}
+.board{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;min-height:52%;position:relative}
+.board h2{margin:0 0 8px;font-size:20px}
+.rootform{font-size:34px;font-weight:800;color:var(--root);letter-spacing:.5px}
+.story{font-size:14px;color:var(--muted);margin:8px 0;max-height:7.5em;overflow:auto}
+.fam{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-top:8px}
+.fam div{background:var(--bg);border-radius:10px;padding:6px 8px;font-size:15px}
+.fam small{display:block;color:var(--muted);font-size:12px}
+.ph{display:block;font-style:normal;font-size:12px;color:var(--accent);letter-spacing:.2px;font-family:"Segoe UI","Noto Sans","Lucida Sans Unicode",system-ui,sans-serif}
+.ph:empty{display:none}
+.ph.big{font-size:17px;margin-top:4px;text-align:center}
+mark{background:none;color:var(--root);font-weight:800}
+.build{display:flex;justify-content:center;gap:6px;margin:24px 0 10px;flex-wrap:wrap}
+.piece{font-size:30px;font-weight:800;padding:8px 14px;border-radius:12px;background:var(--accent2);opacity:0;animation:fly .6s forwards}
+.piece.r{background:color-mix(in srgb,var(--root) 18%,var(--card));color:var(--root)}
+@keyframes fly{from{opacity:0;transform:translateY(30px) scale(.7)}to{opacity:1;transform:none}}
+.merged{text-align:center;font-size:38px;font-weight:800;opacity:0;animation:fly .6s forwards}
+.board ul{margin:6px 0 0;padding-left:22px;font-size:18px;line-height:1.7}
+.sceneicon{font-size:60px;text-align:center}
+.line{padding:8px 10px;border-radius:10px;margin:6px 0;border:1px solid var(--line)}
+.line.me{background:var(--accent2)}
+.line.cur{outline:3px solid var(--hot)}
+.line b{font-size:12px;color:var(--muted);display:block}
+.opts{display:grid;gap:8px;margin-top:10px}
+.opts button{text-align:left;font-size:17px;background:var(--bg);border:1px solid var(--line)}
+#keys{display:flex;gap:6px;overflow-x:auto;padding:8px 14px 0}
+#keys .k{flex:none;background:color-mix(in srgb,var(--hot) 15%,var(--card));border-radius:999px;padding:4px 10px;font-size:14px}
+#subs{padding:6px 14px;font-size:15px;min-height:44px;color:var(--muted)}
+#subs .a{color:var(--ink)}
+.ctl{display:flex;gap:14px;justify-content:center;padding:8px 0 calc(14px + env(safe-area-inset-bottom))}
+.ctl button{width:64px;height:64px;border-radius:50%;font-size:13px;padding:0;white-space:nowrap}
+.ctl button.on{background:var(--ink);color:var(--bg)}
+#hang{background:var(--bad);color:#fff}
+#prep{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:color-mix(in srgb,var(--card) 92%,transparent);border-radius:18px;font-size:16px}
+.spin{width:36px;height:36px;border-radius:50%;border:4px solid var(--accent2);border-top-color:var(--accent);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.hist{display:flex;gap:6px;overflow-x:auto;margin-top:10px}
+.hist button{flex:none;font-size:13px;padding:5px 10px}
+#summary{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+#summary .card{max-width:420px;width:100%}
+/* ---- 词根背单词课 ---- */
+#pick{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+#pick .card{max-width:420px;width:100%;max-height:80vh;overflow:auto}
+#report{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+#report .card{max-width:420px;width:100%}
+#room .top #repBtn{flex:none;margin-left:auto;font-size:12px;padding:6px 10px}
+#pick h2{font-size:18px}
+#pick .row button{flex:none;white-space:nowrap}
+.crow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.crow:first-child{border-top:0}
+.crow .flag{font-size:26px;flex:none;width:34px;text-align:center}
+.crow .info{flex:1;min-width:0}
+.crow .info b{font-size:16px}
+.crow .info small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.crow .bar{height:5px;background:var(--bg);border-radius:3px;margin-top:5px;overflow:hidden}
+.crow .bar i{display:block;height:100%;background:var(--accent)}
+.crow button{flex:none}
+.prow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.prow .av{width:44px;height:44px;font-size:24px}
+.prow .info{flex:1;min-width:0}
+.prow small{display:block;color:var(--muted);font-size:12.5px}
+.rcard{text-align:center;padding:18px 10px;border-radius:14px;background:var(--bg);margin-top:8px;cursor:pointer}
+.rcard .w{font-size:36px;font-weight:800}
+.rcard .m{font-size:17px;color:var(--muted);margin-top:8px;min-height:1.4em}
+.rcard .m.hide{filter:blur(6px)}
+.rcard.ok{outline:3px solid var(--ok)}
+.rcard.bad{outline:3px solid var(--bad)}
+.rcard .note{font-size:14px;font-weight:700;margin-top:8px}
+.sent{margin-top:8px;line-height:1.6}
+.sent .said{font-size:16px;color:var(--muted)}
+.sent .said .x{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--bad) 60%,transparent)}
+.sent .better{font-size:21px;font-weight:700;margin-top:6px}
+.sent .tr{font-size:14px;color:var(--muted);margin-top:4px}
+.ra{font-size:30px;font-weight:800;text-align:center;margin:18px 0 6px;line-height:1.35;word-break:break-word}
+.ra .ok{color:var(--ok)}
+.ra .unclear{color:var(--hot)}
+.ra .miss{color:var(--bad);text-decoration:underline wavy;text-underline-offset:5px}
+.ratr{text-align:center;color:var(--muted);font-size:15px}
+.rares{text-align:center;font-weight:700;margin-top:14px;font-size:16px}
+.rasaid{text-align:center;color:var(--muted);font-size:13px;margin-top:4px}
+.lid{display:inline-block;font-size:11px;line-height:1.5;background:var(--accent2);color:var(--accent);border-radius:6px;padding:0 5px;margin-right:4px;vertical-align:1px}
+.stars{display:flex;gap:6px;justify-content:center;margin:8px 0}
+.stars button{font-size:28px;background:none;padding:0 2px;color:#ccd1dc}
+.stars button.on{color:#f59f00}
+/* ---- 钱包 ---- */
+.bal{font-size:28px;font-weight:800}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-top:10px}
+.plans button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;border:1px solid var(--line);background:var(--bg)}
+.plans b{font-size:18px}
+.plans small{font-size:12px;color:var(--muted)}
+.plans .gift{color:var(--hot)}
+.orow{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);padding:4px 0;border-top:1px solid var(--line)}
+#banner{position:fixed;left:16px;right:16px;top:calc(10px + env(safe-area-inset-top));z-index:20;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 14px;font-size:15px;box-shadow:0 6px 20px rgba(0,0,0,.2);max-width:688px;margin:0 auto}
+</style>
+<script>
+window.onerror = function (msg, src, line) {
+  try { fetch("/app/api/log", {method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({msg: "页面报错：" + msg + " 行" + line, ua: navigator.userAgent})}); } catch (e) {}
+  var b = document.getElementById("boot"); if (b) b.textContent = "页面出错了：" + msg;
+};
+</script>
+</head>
+<body>
+<p id="boot" class="muted" style="margin-top:40px;text-align:center">加载中…</p>
+
+<div id="login" hidden><div class="lg-wrap">
+  <div class="lg-top">
+    <div class="lg-brand"><img src="/app/icon-192.png" alt=""><div><b>外语私教</b><span>AI 外语一对一</span></div></div>
+    <button class="lg-zh" id="zhBtn" data-noconv>繁體</button>
+  </div>
+  <div class="lg-hero">
+    <h1>跟 AI 外教<br>一对一开口说外语</h1>
+    <p>随时随地开课，讲义实时上屏；老师记得你的目标和进度，越学越懂你。</p>
+    <div class="lg-langs"><span>🇬🇧 英语</span><span>🇯🇵 日语</span><span>🇰🇷 韩语</span><span>🇩🇪 德语</span><span>🇫🇷 法语</span><span>🇪🇸 西语</span></div>
+    <div class="lg-faces" id="lgFaces"></div>
+  </div>
+  <div class="lg-card" id="authCard">
+    <div class="lg-tabs" id="lgTabs"><button data-tab="login" class="on">登录</button><button data-tab="register">注册</button></div>
+    <h2 id="resetTitle" hidden>重设密码</h2>
+    <input id="email" type="email" inputmode="email" placeholder="邮箱" autocomplete="email" autocapitalize="off" spellcheck="false" style="margin-top:0">
+    <div class="lg-phone" hidden><select id="cc" aria-label="国家或地区"></select><input id="phone" type="tel"></div>
+    <div data-pane="login">
+      <input id="lPw" type="password" placeholder="密码" autocomplete="current-password">
+      <button class="main" id="btnLogin">登录</button>
+      <div class="lg-links"><a href="#" id="toReset">忘记密码？</a><span class="muted">登录即表示同意用户协议和隐私政策</span></div>
+    </div>
+    <div data-pane="register" hidden>
+      <input id="rPw" type="password" placeholder="设置密码（至少 8 位，含字母和数字）" autocomplete="new-password">
+      <input id="rPw2" type="password" placeholder="再输一次密码" autocomplete="new-password">
+      <button class="main" id="btnReg">注册并登录</button>
+    </div>
+    <div data-pane="reset" hidden>
+      <div class="lg-code"><input id="xCode" inputmode="numeric" maxlength="6" placeholder="邮件里的 6 位验证码" autocomplete="one-time-code">
+        <button class="lg-send" id="xSend">发验证码</button></div>
+      <input id="xPw" type="password" placeholder="新密码（至少 8 位，含字母和数字）" autocomplete="new-password">
+      <button class="main" id="btnReset">重设密码并登录</button>
+      <div class="lg-links"><a href="#" id="backLogin">返回登录</a></div>
+    </div>
+    <p class="lg-note" id="devNote" hidden>测试版：邮件还没接通，验证码显示在管理后台。</p>
+    <label class="lg-agree" id="agreeRow2"><input type="checkbox" id="lgAgree"><span>我已阅读并同意
+      <a href="https://walterwood1995.github.io/sprachkurs/#agb" target="_blank" rel="noopener">用户协议</a> 和
+      <a href="https://walterwood1995.github.io/sprachkurs/#datenschutz" target="_blank" rel="noopener">隐私政策</a>，并知悉老师是 AI。</span></label>
+    <div class="lg-or"><span>或</span></div>
+    <button class="lg-guest" id="btnGuest">游客体验 · 免注册</button>
+    <p class="lg-note">游客可上免费老师、每天限时体验；注册后送体验金，可充值、保存学习记录。</p>
+  </div>
+  <div class="lg-feats">
+    <div><b>🧩 词根记单词</b>认识一个词根，记住一族词</div>
+    <div><b>💬 情景对话</b>点餐、旅行、面试，台词上屏</div>
+    <div><b>🎬 电影配音</b>和老师分角色演名场面</div>
+    <div><b>🔥 打卡与生词本</b>重点词自动收藏，天天进步</div>
+  </div>
+  <div class="lg-foot">
+    <a href="https://walterwood1995.github.io/sprachkurs/#impressum" target="_blank" rel="noopener">Impressum</a> ·
+    <a href="https://walterwood1995.github.io/sprachkurs/#agb" target="_blank" rel="noopener">用户协议</a> ·
+    <a href="https://walterwood1995.github.io/sprachkurs/#datenschutz" target="_blank" rel="noopener">隐私政策</a><br>© 2026 Haoyang Wu
+  </div>
+</div></div>
+
+<div id="home" class="page" hidden>
+  <div class="row"><h1>外语私教 <span class="tag" id="vipTag" hidden>免费账户 · 所有课程免费</span></h1><button class="small" id="btnOut">账户</button></div>
+  <div class="card" id="guestBar" hidden><div class="row"><div><b>游客模式</b><div class="muted" id="guestText"></div></div>
+    <button class="small" id="guestReg" style="background:var(--hot);color:#fff">注册</button></div></div>
+  <div class="card stats" id="stats"></div>
+  <div class="card" id="courses" hidden>
+    <div class="row" style="margin-bottom:4px"><b>📚 词根背单词课</b><span class="muted" style="font-size:12px">固定课程 · 间隔复习 · 造句</span></div>
+    <div class="muted" style="font-size:13px">按单词速记的方法：认识一个词根，记住一族词。每节先复习到期的词，再学新词根。</div>
+    <div id="courseList" style="margin-top:6px"></div>
+  </div>
+  <div class="card" id="wallet" hidden>
+    <div class="row"><div><div class="muted">剩余余额</div><div class="bal">¥<span id="bal">0.00</span></div></div><div class="muted" id="mins" style="text-align:right"></div></div>
+    <label class="muted" id="agreeRow" style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:13px">
+      <input type="checkbox" id="agree" style="width:auto;margin-top:3px">
+      <span>我同意付款后立即开始服务，并知悉已使用的课时不适用 14 天撤回权；未用完的余额可随时按比例退款。
+        <a href="https://walterwood1995.github.io/sprachkurs/#agb" target="_blank">用户协议</a> ·
+        <a href="https://walterwood1995.github.io/sprachkurs/#datenschutz" target="_blank">隐私政策</a></span></label>
+    <div class="plans" id="plans"></div>
+    <p class="muted" id="payNote" style="margin:8px 0 0"></p>
+    <div id="orders" style="margin-top:6px"></div>
+  </div>
+  <div class="card">
+    <div class="row" style="margin-bottom:8px"><b>帮我挑老师</b><span class="muted" id="pickHint"></span></div>
+    <div class="muted">想学什么</div>
+    <div class="chips" id="langChips" style="margin:6px 0 10px"></div>
+    <div class="muted">学来做什么</div>
+    <div class="chips" id="goalChips" style="margin:6px 0 10px"></div>
+    <div class="muted">喜欢什么样的老师</div>
+    <div class="chips" id="styleChips" style="margin:6px 0 0"></div>
+    <div id="priceRow"><div class="muted" style="margin-top:10px">价格</div>
+    <div class="chips" id="priceChips" style="margin:6px 0 0"></div></div>
+  </div>
+  <div class="card" id="tlist"></div>
+  <div class="card"><div class="row"><b>生词本</b><span class="muted" id="wcount"></span></div><div id="words" class="muted" style="margin-top:6px"></div></div>
+  <p class="muted" style="text-align:center">建议戴耳机。上课时可以打开摄像头，老师能看到你的反应（默认关闭，画面不保存）。</p>
+</div>
+
+<div id="room" hidden>
+  <div class="top">
+    <div class="av" id="tav"></div>
+    <div class="who"><b id="tname"></b><div class="muted"><span id="tstate">准备上课</span> · <span id="ttime">0:00</span></div></div>
+    <button class="small" id="repBtn" title="举报老师刚才说的话" style="background:none;border:1px solid var(--line);color:var(--muted)">⚑ 举报</button>
+    <video id="cam" autoplay playsinline muted hidden></video>
+  </div>
+  <div id="keys"></div>
+  <div id="boardWrap">
+    <div class="board" id="board"><div id="prep"><div class="spin"></div><div id="prepText">老师正在备课…</div></div><div id="bcontent"></div></div>
+    <div class="hist" id="hist"></div>
+  </div>
+  <div id="subs"></div>
+  <div id="tvid" hidden><button class="x" id="tvX" title="关闭老师画面">✕</button><div id="tv2d"></div><div id="tv3d" hidden></div>
+    <div id="tvload" hidden></div><div id="tvname"></div></div>
+  <div class="ctl"><button id="mute">静音</button><button id="camBtn">摄像头</button><button id="tvBtn">老师</button><button id="hang">下课</button></div>
+</div>
+
+<div id="summary" hidden><div class="card" id="sumCard"></div></div>
+<div id="acct" hidden><div class="card">
+  <div class="row"><h2 style="margin:0">账户</h2><button class="small" id="acctX">关闭</button></div>
+  <p class="muted" id="acctLabel" style="margin:6px 0 12px"></p>
+  <div id="acctPw"><b id="aPwTitle">修改密码</b>
+    <input id="aOld" type="password" placeholder="原密码" autocomplete="current-password">
+    <input id="aNew" type="password" placeholder="新密码（至少 8 位，含字母和数字）" autocomplete="new-password">
+    <button class="main" id="aSave" style="margin-top:10px">保存新密码</button>
+    <p class="muted" style="font-size:12px">改密码后，其他手机上的登录会自动退出。</p></div>
+  <div style="display:grid;gap:8px;margin-top:10px"><button id="aOut">退出登录</button><button id="aOutAll">退出所有设备</button>
+    <button id="aDel" style="background:none;border:1px solid var(--line);color:var(--bad)">删除账户</button></div>
+  <div id="delPane" hidden style="margin-top:12px;padding:12px;border-radius:12px;background:color-mix(in srgb,var(--bad) 8%,var(--card))">
+    <b style="color:var(--bad)">删除账户（不能恢复）</b>
+    <p class="muted" id="delText" style="font-size:13px;margin:6px 0"></p>
+    <input id="delPw" type="password" placeholder="输入密码确认" autocomplete="current-password">
+    <button class="main" id="delGo" style="margin-top:8px;background:var(--bad)">确认删除</button></div>
+</div></div>
+<div id="pick" hidden><div class="card">
+  <div class="row"><h2 style="margin:0" id="pickTitle">选老师</h2><button class="small" id="pickX">关闭</button></div>
+  <div id="pickList" style="margin-top:8px"></div>
+</div></div>
+<div id="report" hidden><div class="card">
+  <div class="row"><h2 style="margin:0">举报这段内容</h2><button class="small" id="repX">关闭</button></div>
+  <p class="muted" style="font-size:13px">AI 老师说了不合适的话？告诉我们，我们会检查并改进。</p>
+  <div class="muted" style="font-size:13px">老师刚才说：</div><div id="repText" style="font-size:14px;margin:4px 0 10px;max-height:5em;overflow:auto"></div>
+  <div class="chips" id="repWhy"></div>
+  <input id="repNote" placeholder="补充说明（可不填）" maxlength="300" style="margin-top:10px">
+  <button class="main" id="repGo" style="margin-top:10px">提交举报</button>
+</div></div>
+<div id="banner" hidden></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const mmss = s => { s = Math.max(0, Math.round(s || 0)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+const LANG = {en: "🇬🇧 英语", ja: "🇯🇵 日语", ko: "🇰🇷 韩语", de: "🇩🇪 德语", fr: "🇫🇷 法语", es: "🇪🇸 西语", it: "🇮🇹 意语"};
+const GOALS = {旅游: ["情景", "旅行", "口语"], 工作: ["专业", "讲得透", "严谨"], 看剧: ["电影", "配音", "日剧", "韩剧"], 考试: ["词根", "专业", "严谨"], 交朋友: ["口语", "热情", "活泼"], 陪孩子: ["耐心", "温柔"]};
+const STYLES = {甜美会撒娇: ["甜美", "撒娇", "可爱"], 风趣幽默: ["幽默", "爱笑", "活泼"], 专业讲透: ["专业", "讲得透", "严谨", "词根"], 温柔耐心: ["温柔", "耐心", "慢慢来"], 热情开朗: ["热情", "活泼", "爱笑"]};
+// ---------- 在哪儿跑：后端自己的 /app，或 GitHub Pages（安卓 App 装的就是 Pages 上这一份） ----------
+// Pages 上：接口、课堂通道、老师照片都在后端；后端地址每次重启会变，读同目录的 backend.json（后端开好隧道后自动推上来）
+const REMOTE = /\.github\.io$/i.test(location.hostname) || /[?&]remote=1\b/.test(location.search);   // remote=1：本机测试用
+const ASSET = REMOTE ? "./" : "/app/";
+let BASE = "";
+const U = p => (typeof p === "string" && p.startsWith("/app/") ? BASE + p : p);
+// 安卓 App（Trusted Web Activity）：Google Play 规定 App 里买数字服务要走 Play 结算，第一版先不在 App 里卖——隐藏充值
+const TWA = (() => {
+  const hit = /[?&]twa=1\b/.test(location.search) || document.referrer.startsWith("android-app://");
+  try { if (hit) localStorage.setItem("tu_twa", "1"); return localStorage.getItem("tu_twa") === "1"; } catch (e) { return hit; }
+})();
+async function findBackend(){
+  if (!REMOTE) return true;
+  for (let i = 0; i < 40; i++) {
+    try {
+      const j = await (await fetch("backend.json?t=" + Date.now(), {cache: "no-store"})).json();
+      const base = String(j.url || "").replace(/\/$/, "");
+      if (base && (await fetch(base + "/app/api/showcase", {cache: "no-store"})).ok) { BASE = base; $("#banner").hidden = true; return true; }
+    } catch (e) {}
+    banner("正在连接服务器…（服务器刚重启的话要一分钟左右）");
+    await new Promise(r => setTimeout(r, i < 5 ? 3000 : 6000));
+  }
+  banner("暂时连不上服务器，请稍后再打开。");
+  return false;
+}
+let auth = {}; try { auth = JSON.parse(localStorage.getItem("tu_auth") || "{}"); } catch (e) {}
+let ME = null, PICK = {lang: "", goal: "", style: "", price: ""};
+function rlog(msg){ try { fetch(U("/app/api/log"), {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({msg, ua: navigator.userAgent})}); } catch (e) {} }
+function show(id){ $("#boot").hidden = true; ["login", "home", "room"].forEach(x => $("#" + x).hidden = x !== id); }
+async function api(path, body){
+  const r = await fetch(U(path), {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  const j = await r.json(); if (!r.ok) throw new Error(j.error || r.status); return j;
+}
+function save(){ try { localStorage.setItem("tu_auth", JSON.stringify(auth)); } catch (e) {} }
+function avatarHTML(a){ return a && /^(https?:|\/app\/avatar\/)/.test(a) ? `<img src="${esc(U(a))}">` : esc(a || "🙂"); }
+
+async function boot(){
+  if (!auth.token) return show("login");
+  try { ME = await api("/app/api/me", {token: auth.token}); renderHome(); show("home"); loadStudy(); }
+  catch (e) { auth = {}; save(); show("login"); return; }
+  afterPay();
+}
+async function refreshMe(){ try { ME = await api("/app/api/me", {token: auth.token}); renderHome(); } catch (e) {} }
+
+// ---------- 充值 ----------
+const yuan = f => (Number(f || 0) / 100).toFixed(2);
+function banner(text, autoHide){
+  const b = $("#banner"); b.textContent = text; b.hidden = false; clearTimeout(banner.t);
+  if (autoHide) banner.t = setTimeout(() => b.hidden = true, 6000);
+}
+function renderWallet(){
+  $("#vipTag").hidden = !ME.vip;
+  $("#guestBar").hidden = !ME.guest;
+  if (ME.guest) $("#guestText").textContent = `可以上免费老师，每天体验 ${ME.guest_daily_min || 10} 分钟。注册后送体验金、所有老师都能上${TWA ? "" : "、可以充值"}，学习记录长期保存。`;
+  $("#btnOut").textContent = ME.guest ? "退出" : "账户";
+  $("#wallet").hidden = !!ME.free || !!ME.guest;
+  if (ME.free || ME.guest) return;
+  $("#bal").textContent = yuan(ME.balance);
+  const rate = Math.min(...ME.counselors.map(t => t.rate).filter(r => r > 0)) || ME.rate;
+  $("#mins").innerHTML = rate && isFinite(rate) ? `每分钟 ¥${yuan(rate)} 起<br>约可上 ${Math.floor(ME.balance / rate)} 分钟` : "";
+  const pay = ME.pay || {};
+  ["#agreeRow", "#plans", "#payNote"].forEach(x => $(x).hidden = TWA);   // 安卓 App 第一版不卖（Play 规定要用 Play 结算）
+  $("#plans").innerHTML = pay.mode === "off" ? "" : (ME.plans || []).map(p => `<button data-plan="${esc(p.id)}"><b>${esc(p.price)}</b>
+    <small>到账 ¥${yuan(p.credit)}</small>${p.note ? `<small class="gift">${esc(p.note)}</small>` : ""}</button>`).join("");
+  $("#plans").querySelectorAll("[data-plan]").forEach(b => b.onclick = () => buy(b.dataset.plan, b));
+  $("#payNote").textContent = pay.text || "";
+  // 最近账单：上课扣费 + 充值，按时间倒序
+  const names = Object.fromEntries(ME.counselors.map(t => [t.id, t.name]));
+  const day = ts => new Date(ts * 1000).toLocaleDateString(undefined, {month: "numeric", day: "numeric"});
+  const bill = [
+    ...(ME.recent || []).filter(r => r.billed_s > 0).map(r => ({ts: r.started, left: `${day(r.started)} 上课 · ${esc(names[r.counselor] || "老师")} ${mmss(r.billed_s)}`,
+      right: r.free ? "免费" : `<b>−¥${yuan(r.charged)}</b>`})),
+    ...(ME.orders || []).filter(o => !["failed", "expired"].includes(o.status)).map(o => ({ts: o.created, left: `${day(o.created)} 充值 ${esc(o.price)}${o.method ? " · " + esc(o.method) : ""}`,
+      right: o.status === "paid" ? `<b style="color:var(--ok)">+¥${yuan(o.credit)}</b>` : esc(o.status_zh) + (o.refunded ? " " + esc(o.refunded) : "")})),
+  ].sort((a, b) => b.ts - a.ts).slice(0, 4);
+  $("#orders").innerHTML = bill.length ? `<div class="muted" style="font-size:13px;margin-top:4px">最近账单</div>` +
+    bill.map(b => `<div class="orow"><span>${b.left}</span><span>${b.right}</span></div>`).join("") : "";
+}
+async function buy(plan, btn){
+  if (!$("#agree").checked) { alert("请先勾选上面的同意条款，再充值。"); $("#agreeRow").scrollIntoView({block: "center"}); return; }
+  btn.disabled = true; banner("正在打开付款页面…");
+  try { const j = await api("/app/api/pay/create", {token: auth.token, plan, agree: true}); location.href = j.url; }
+  catch (e) { $("#banner").hidden = true; alert(e.message); btn.disabled = false; }
+}
+async function afterPay(){   // 从付款页跳回来：?paid=订单号 / ?pay_cancel=订单号
+  const q = new URLSearchParams(location.search), paid = q.get("paid"), cancel = q.get("pay_cancel");
+  if (!paid && !cancel) return;
+  history.replaceState(null, "", location.pathname);
+  if (cancel) {
+    try { const j = await api("/app/api/pay/cancel", {token: auth.token, order: cancel}); ME = j.me; renderHome(); } catch (e) {}
+    if (ME && ME.orders && ME.orders[0] && ME.orders[0].status === "paid") banner("付款成功，已到账", true); else banner("已取消付款", true);
+    return;
+  }
+  banner("正在确认付款…");
+  for (let i = 0; i < 20; i++) {
+    try {
+      const j = await api("/app/api/pay/check", {token: auth.token, order: paid}); ME = j.me; renderHome();
+      if (j.order.status === "paid") return banner(`充值成功：到账 ¥${yuan(j.order.credit)}，余额 ¥${yuan(ME.balance)}`, true);
+      if (["failed", "canceled", "expired"].includes(j.order.status)) return banner("这笔没有付成功，可以再试一次", true);
+    } catch (e) {}
+    await new Promise(r => setTimeout(r, 2000));
+  }
+  banner("付款还在确认中：到账后余额会自动加上，过一会儿刷新看看。", true);
+}
+function needTopup(msg){
+  if (ME && ME.guest) { if (confirm((msg || "游客只能上免费老师的课。") + "\n\n现在注册吗？")) toRegister(); else show("home"); return; }
+  if (TWA) { alert("余额不够上这位老师的课了。可以先上免费老师的课。"); show("home"); return; }
+  alert(msg || "余额不够上一分钟课了，先充值再来上课。");
+  show("home"); $("#wallet").scrollIntoView({behavior: "smooth", block: "center"});
+}
+// ---------- 登录页：国家 / 地区区号、同意条款、在线老师 ----------
+const CC = [["+852", "香港"], ["+886", "台湾"], ["+853", "澳门"], ["+65", "新加坡"], ["+60", "马来西亚"], ["+1", "美国 / 加拿大"],
+  ["+44", "英国"], ["+61", "澳大利亚"], ["+64", "新西兰"], ["+49", "德国"], ["+33", "法国"], ["+81", "日本"], ["+82", "韩国"], ["+86", "中国大陆"]];
+function defaultCC(){
+  const l = (navigator.language || "").toLowerCase();
+  for (const [re, c] of [[/tw|hant-tw/, "+886"], [/mo/, "+853"], [/hk|hant/, "+852"], [/sg/, "+65"], [/my|^ms/, "+60"], [/cn|hans/, "+86"],
+                         [/^de/, "+49"], [/^fr/, "+33"], [/^ja/, "+81"], [/^ko/, "+82"], [/gb|uk/, "+44"], [/au/, "+61"], [/nz/, "+64"], [/^en/, "+1"]])
+    if (re.test(l)) return c;
+  return "+852";
+}
+$("#cc").innerHTML = CC.map(([c, n]) => `<option value="${c}">${n} ${c}</option>`).join("");
+try { $("#cc").value = localStorage.getItem("tu_cc") || defaultCC(); } catch (e) { $("#cc").value = defaultCC(); }
+function fullPhone(){
+  const raw = $("#phone").value.trim();
+  if (raw.startsWith("+")) return raw;
+  return $("#cc").value + raw.replace(/\D/g, "").replace(/^0+/, "");
+}
+function loadShowcase(){
+  fetch(U("/app/api/showcase")).then(r => r.json()).then(s => {
+    const ps = (s.teachers || []).filter(t => /^(https?:|\/app\/avatar\/)/.test(t.avatar || ""));
+    $("#lgFaces").innerHTML = ps.slice(0, 7).map(t => `<img src="${esc(U(t.avatar))}" alt="${esc(t.name)}" loading="lazy">`).join("") +
+      `<span>${(s.teachers || []).length} 位 AI 老师随时开课</span>`;
+  }).catch(() => {});
+}
+// ---------- 登录 / 注册 / 忘记密码 / 游客（hotline/auth.py） ----------
+let AUTH_TAB = "login", GUEST_TOKEN = "";
+function setAuthTab(t){
+  AUTH_TAB = t;
+  document.querySelectorAll("#lgTabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  document.querySelectorAll("#authCard [data-pane]").forEach(p => p.hidden = p.dataset.pane !== t);
+  $("#lgTabs").hidden = t === "reset"; $("#resetTitle").hidden = t !== "reset";
+  $("#agreeRow2").hidden = t === "reset";
+}
+document.querySelectorAll("#lgTabs button").forEach(b => b.onclick = () => setAuthTab(b.dataset.tab));
+$("#toReset").onclick = e => { e.preventDefault(); setAuthTab("reset"); };
+$("#backLogin").onclick = e => { e.preventDefault(); setAuthTab("login"); };
+function emailOk(){
+  const e = $("#email").value.trim();
+  if (!/^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/.test(e)) { alert("请输入正确的邮箱地址"); $("#email").focus(); return false; }
+  try { localStorage.setItem("tu_email", e); } catch (x) {}
+  return true;
+}
+const email = () => $("#email").value.trim().toLowerCase();
+try { $("#email").value = localStorage.getItem("tu_email") || ""; } catch (e) {}
+function agreeOk(){
+  if ($("#lgAgree").checked) return true;
+  alert("请先阅读并勾选同意《用户协议》和《隐私政策》。"); $("#agreeRow2").scrollIntoView({block: "center"}); return false;
+}
+let CODE_UNTIL = 0;
+function tickSend(){
+  const left = Math.ceil((CODE_UNTIL - Date.now()) / 1000);
+  $("#xSend").disabled = left > 0; $("#xSend").textContent = left > 0 ? `${left} 秒后重发` : "发验证码";
+  if (left > 0) setTimeout(tickSend, 500);
+}
+$("#xSend").onclick = async () => {   // 忘记密码：验证码发到邮箱
+  if (!emailOk()) return;
+  $("#xSend").disabled = true;
+  try {
+    const j = await api("/app/api/auth/email/code", {email: email()});
+    CODE_UNTIL = Date.now() + (j.cooldown || 60) * 1000; tickSend();
+    $("#devNote").hidden = !j.dev;
+    banner(j.dev ? "测试版：验证码在管理后台（邮件还没接通）" : "验证码已发到邮箱（也看看垃圾邮件）", true);
+  } catch (e) { $("#xSend").disabled = false; alert(e.message); }
+};
+function afterLogin(j){
+  auth = {token: j.token, phone: j.phone, guest: !!j.guest}; save(); ME = j; GUEST_TOKEN = "";
+  ["lPw", "rPw", "rPw2", "xCode", "xPw"].forEach(id => $("#" + id).value = "");
+  renderHome(); show("home"); loadStudy();
+}
+$("#btnLogin").onclick = async () => {
+  if (!emailOk()) return;
+  if (!$("#lPw").value) { alert("请输入密码"); return; }
+  try { afterLogin(await api("/app/api/auth/email/login", {email: email(), password: $("#lPw").value})); }
+  catch (e) { alert(e.message); }
+};
+$("#btnReg").onclick = async () => {
+  if (!emailOk() || !agreeOk()) return;
+  if ($("#rPw").value !== $("#rPw2").value) { alert("两次输入的密码不一样"); return; }
+  try { afterLogin(await api("/app/api/auth/email/register", {email: email(), password: $("#rPw").value, guest_token: GUEST_TOKEN})); }
+  catch (e) { alert(e.message); }
+};
+$("#btnReset").onclick = async () => {
+  if (!emailOk()) return;
+  try { afterLogin(await api("/app/api/auth/email/reset", {email: email(), code: $("#xCode").value, password: $("#xPw").value})); }
+  catch (e) { alert(e.message); }
+};
+function deviceId(){
+  let d = ""; try { d = localStorage.getItem("tu_dev") || ""; } catch (e) {}
+  if (!/^\d{12}$/.test(d)) {
+    const a = new Uint32Array(3); crypto.getRandomValues(a);
+    d = Array.from(a, x => String(x % 10000).padStart(4, "0")).join("");
+    try { localStorage.setItem("tu_dev", d); } catch (e) {}
+  }
+  return d;
+}
+$("#btnGuest").onclick = async () => {
+  if (!agreeOk()) return;
+  try { afterLogin(await api("/app/api/auth/guest", {device: deviceId()})); } catch (e) { alert(e.message); }
+};
+$("#lPw").onkeydown = e => { if (e.key === "Enter") $("#btnLogin").click(); };
+$("#rPw2").onkeydown = e => { if (e.key === "Enter") $("#btnReg").click(); };
+function toRegister(){   // 游客 → 注册：带着游客凭证，注册后生词本搬过去
+  GUEST_TOKEN = auth.guest ? auth.token : "";
+  show("login"); setAuthTab("register"); window.scrollTo(0, 0);
+}
+$("#guestReg").onclick = toRegister;
+
+// ---------- 账户：改密码、退出、退出所有设备 ----------
+$("#btnOut").onclick = () => {
+  if (ME && ME.guest) {   // 游客退出：体验记录在服务器上一起删掉
+    if (confirm("游客模式：退出后体验记录不保留。要注册账号吗？（取消 = 直接退出）")) return toRegister();
+    api("/app/api/account/delete", {token: auth.token}).catch(() => {}); auth = {}; save(); return show("login");
+  }
+  $("#delPane").hidden = true;
+  $("#acctLabel").textContent = `已登录：${ME ? ME.label : ""}`;
+  $("#aPwTitle").textContent = ME && ME.has_password ? "修改密码" : "设置密码";
+  $("#aOld").hidden = !(ME && ME.has_password); $("#aOld").value = ""; $("#aNew").value = "";
+  $("#acct").hidden = false;
+};
+$("#acctX").onclick = () => $("#acct").hidden = true;
+$("#aDel").onclick = () => {
+  $("#delText").textContent = `账户（${ME ? ME.label : ""}）、${ME && ME.balance > 0 && !ME.free ? `余额 ¥${yuan(ME.balance)}、` : ""}生词本和学习进度、上课记录、老师对你的记忆都会删除，不能恢复。` +
+    "按税法要求，付款和扣费的账单会去掉身份信息后保留。";
+  $("#delPw").hidden = !(ME && ME.has_password); $("#delPw").value = "";
+  $("#delPane").hidden = !$("#delPane").hidden;
+};
+$("#delGo").onclick = async () => {
+  if (!confirm("确定删除这个账户吗？删除后不能恢复。")) return;
+  try {
+    await api("/app/api/account/delete", {token: auth.token, password: $("#delPw").value});
+    auth = {}; save(); $("#acct").hidden = true; show("login"); banner("账户已删除", true);
+  } catch (e) { alert(e.message); }
+};
+$("#aOut").onclick = () => { auth = {}; save(); $("#acct").hidden = true; show("login"); };
+$("#aOutAll").onclick = async () => {
+  if (!confirm("所有手机上的登录都会退出（包括这台）。确定？")) return;
+  try { await api("/app/api/auth/logout_all", {token: auth.token}); } catch (e) {}
+  auth = {}; save(); $("#acct").hidden = true; show("login");
+};
+$("#aSave").onclick = async () => {
+  try {
+    const j = await api("/app/api/auth/password", {token: auth.token, old: $("#aOld").value, new: $("#aNew").value});
+    auth.token = j.token; save(); ME.has_password = true; $("#acct").hidden = true; banner("新密码已保存，其他手机上的登录已退出", true);
+  } catch (e) { alert(e.message); }
+};
+
+// ---------- 简体 / 繁體（台湾用语 / 香港用字）：整页（含老师说的字幕）在浏览器里转，用 OpenCC ----------
+const ZH = window.__ZH || "tw";   // 默认繁体（页面最前面就定好了，避免先闪一下简体）
+$("#zhBtn").textContent = ZH === "s" ? "繁體" : "简体";
+$("#zhBtn").onclick = () => {
+  const next = ZH === "s" ? (/hk|mo/i.test(navigator.language || "") ? "hk" : "tw") : "s";
+  try { localStorage.setItem("tu_zh", next); } catch (e) {}
+  location.reload();
+};
+function loadScript(src){ return new Promise((ok, bad) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = bad; document.head.append(s); }); }
+async function applyZh(){
+  if (ZH === "s") return;
+  try { await loadScript(ASSET + "opencc-cn2t.js"); }
+  catch (e) { rlog("繁体转换库没加载出来"); document.documentElement.classList.remove("zh-wait"); return; }
+  const conv0 = OpenCC.Converter({from: "cn", to: ZH === "hk" ? "hk" : "twp"}), HAN = /[一-鿿]/;
+  const FIX = ZH === "hk" ? [] : [[/賬戶/g, "帳戶"], [/賬號/g, "帳號"], [/賬單/g, "帳單"], [/反饋/g, "回饋"]];   // 台湾习惯写法
+  const conv = s => FIX.reduce((t, [a, b]) => t.replace(a, b), conv0(s));
+  const fix = n => {
+    if (!n.nodeValue || !HAN.test(n.nodeValue) || (n.parentNode && n.parentNode.closest && n.parentNode.closest("[data-noconv]"))) return;
+    const v = conv(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v;
+  };
+  const walk = root => {
+    if (root.nodeType === 3) return fix(root);
+    if (root.nodeType !== 1 || /^(SCRIPT|STYLE|TEXTAREA|INPUT)$/.test(root.nodeName)) return;
+    const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {acceptNode: n => /^(SCRIPT|STYLE|TEXTAREA)$/.test(n.parentNode.nodeName) ? 2 : 1});
+    let n; while ((n = tw.nextNode())) fix(n);
+    (root.querySelectorAll ? [root, ...root.querySelectorAll("[placeholder],[title],[aria-label]")] : []).forEach(el => {
+      for (const a of ["placeholder", "title", "aria-label"]) { const v = el.getAttribute && el.getAttribute(a); if (v && HAN.test(v)) el.setAttribute(a, conv(v)); }
+    });
+  };
+  walk(document.body); document.title = conv(document.title);
+  document.documentElement.lang = ZH === "hk" ? "zh-Hant-HK" : "zh-Hant-TW";
+  document.documentElement.classList.remove("zh-wait");
+  new MutationObserver(ms => { for (const m of ms) { if (m.type === "characterData") fix(m.target); else m.addedNodes.forEach(walk); } })
+    .observe(document.body, {childList: true, subtree: true, characterData: true});
+  const a0 = window.alert.bind(window), c0 = window.confirm.bind(window);
+  window.alert = m => a0(conv(String(m))); window.confirm = m => c0(conv(String(m)));
+}
+applyZh();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register(ASSET + "sw.js", {scope: REMOTE ? "./" : "/app"}).catch(() => {});
+
+async function loadStudy(){
+  try {
+    const s = await api("/app/api/study", {token: auth.token});
+    const p = s.progress;
+    $("#stats").innerHTML = `<div><b>🔥${p.streak}</b><span class="muted">连续天数</span></div><div><b>${p.lessons}</b><span class="muted">节课</span></div>
+      <div><b>${p.minutes}</b><span class="muted">分钟</span></div><div><b>${p.words}</b><span class="muted">生词</span></div>`;
+    $("#wcount").textContent = s.words.length ? `${s.words.length} 个` : "";
+    $("#words").innerHTML = s.words.slice(0, 40).map(w => `<span class="tag">${fw(esc(w.word))}${w.ph ? ` <small style="color:var(--accent)">${esc(phText(w.ph, w.word))}</small>` : ""} <small>${esc(w.meaning)}</small></span>`).join("") || "上课时老师标的重点词会自动收进来。";
+    renderCourses(s.courses || []);
+  } catch (e) {}
+}
+
+// ---------- 词根背单词课：每门语言一套固定课程（按词根顺序），每节先复习到期的词、再学新词根 ----------
+function renderCourses(list){
+  const have = new Set(((ME && ME.counselors) || []).map(t => t.lang));
+  const cs = list.filter(c => have.has(c.lang) && c.total);   // 没有这门语言的老师就先不显示
+  $("#courses").hidden = !cs.length;
+  $("#courseList").innerHTML = cs.map(c => {
+    const [flag, ...nm] = (LANG[c.lang] || "📘 " + c.name).split(" ");
+    const done = c.idx >= c.total, pct = Math.min(100, Math.round(100 * c.idx / c.total));
+    return `<div class="crow"><span class="flag">${flag}</span><div class="info"><b>${esc(nm.join(" ") || c.name)}词根课</b>
+      <small>${done ? "词根全部学完 · 继续复习" : `第 ${c.idx + 1} / ${c.total} 个词根`} · ${c.due ? `<b style="color:var(--hot)">${c.due} 个待复习</b>` : c.words ? "暂无待复习" : "从第一课开始"}${c.words ? ` · 记牢 ${c.solid}/${c.words}` : ""}</small>
+      <div class="bar"><i style="width:${pct}%"></i></div></div>
+      <button class="small" data-course="${esc(c.lang)}">${c.lessons || c.idx ? "继续" : "开始"}</button></div>`;
+  }).join("");
+  $("#courseList").querySelectorAll("[data-course]").forEach(b => b.onclick = () => pickTeacher(b.dataset.course));
+}
+function pickTeacher(lang){   // 词根课选哪位老师上：同一门语言的老师都行，免费的、擅长词根的排前面
+  const rank = t => (t.rate > 0 ? 2 : 0) - ((t.tags || []).join(" ").includes("词根") ? 1 : 0);
+  const ts = ME.counselors.filter(t => t.lang === lang).sort((a, b) => rank(a) - rank(b));
+  $("#pickTitle").textContent = `${LANG[lang] || lang} 词根课 · 选老师`;
+  $("#pickList").innerHTML = ts.map(t => `<div class="prow"><div class="av">${avatarHTML(t.avatar)}</div>
+    <div class="info"><b>${esc(t.name)}</b><small>${esc((t.tags || []).slice(0, 3).join(" · "))}</small></div>
+    <button class="small" data-t="${t.id}" data-n="${esc(t.name)}" data-a="${esc(t.avatar)}" data-r="${t.rate}">${ME.guest && t.rate > 0 ? "注册后<br>可上" : "上课"}${ME.free || (ME.guest && t.rate > 0) ? "" : `<br><small>${t.rate > 0 ? `¥${yuan(t.rate)}/分` : "免费"}</small>`}</button></div>`).join("")
+    || `<div class="muted">这门语言暂时没有老师</div>`;
+  $("#pickList").querySelectorAll("[data-t]").forEach(b => b.onclick = () => {
+    $("#pick").hidden = true;
+    if (ME.guest && Number(b.dataset.r) > 0) return needTopup("游客只能上免费老师的课：注册账号后，所有老师都能上。");
+    if (!ME.free && !ME.guest && ME.balance < Number(b.dataset.r)) return needTopup();
+    startClass(b.dataset.t, b.dataset.n, b.dataset.a, {mode: "course", lang});
+  });
+  $("#pick").hidden = false;
+}
+$("#pickX").onclick = () => $("#pick").hidden = true;
+
+function chips(el, items, key){
+  $(el).innerHTML = items.map(([v, label]) => `<span class="chip ${PICK[key] === v ? "on" : ""}" data-v="${esc(v)}">${esc(label)}</span>`).join("");
+  $(el).querySelectorAll(".chip").forEach(c => c.onclick = () => { PICK[key] = PICK[key] === c.dataset.v ? "" : c.dataset.v; renderHome(); });
+}
+function score(t){
+  const txt = (t.tags || []).join(" ") + " " + (t.style || "") + " " + (t.area || "");
+  let s = 0;
+  for (const w of (GOALS[PICK.goal] || [])) if (txt.includes(w)) s += 1;
+  for (const w of (STYLES[PICK.style] || [])) if (txt.includes(w)) s += 2;
+  return s;
+}
+function renderHome(){
+  renderWallet();
+  const langs = [...new Set(ME.counselors.map(t => t.lang))];
+  chips("#langChips", [["", "全部"], ...langs.map(l => [l, LANG[l] || l])], "lang");
+  chips("#goalChips", Object.keys(GOALS).map(g => [g, g]), "goal");
+  chips("#styleChips", Object.keys(STYLES).map(g => [g, g]), "style");
+  $("#priceRow").hidden = !!ME.free;
+  if (!ME.free) chips("#priceChips", [["", "全部"], ["free", "免费老师"], ["paid", "收费老师"]], "price");
+  let list = ME.counselors.filter(t => !PICK.lang || t.lang === PICK.lang)
+    .filter(t => ME.free || !PICK.price || (PICK.price === "free" ? t.rate <= 0 : t.rate > 0));
+  const picking = PICK.goal || PICK.style;
+  if (picking) list = list.map(t => [score(t), t]).sort((a, b) => b[0] - a[0]).map(x => x[1]);
+  const best = picking && list.length && score(list[0]) > 0 ? list[0].id : "";
+  $("#pickHint").textContent = best ? "已把最合适的排在前面" : "";
+  $("#tlist").innerHTML = list.map(t => `
+    <div class="t ${t.id === best ? "best" : ""}"><div class="av">${avatarHTML(t.avatar)}</div>
+      <div class="info"><div><b>${esc(t.name)}</b> <span class="muted">${esc(LANG[t.lang] || "")} · ${esc(t.area)}</span></div>
+        <div>${(t.tags || []).map(x => `<span class="tag">${esc(x)}</span>`).join("")}</div>
+        <div class="muted" style="margin-top:4px">${esc(t.style)}</div></div>
+      <button class="small" data-t="${t.id}" data-n="${esc(t.name)}" data-a="${esc(t.avatar)}" data-r="${t.rate}">${ME.guest && t.rate > 0 ? "注册后<br>可上" : "上课"}${ME.free || (ME.guest && t.rate > 0) ? "" : `<br><small>${t.rate > 0 ? `¥${yuan(t.rate)}/分` : "免费"}</small>`}</button></div>`).join("") || `<div class="muted">没有这门语言的老师</div>`;
+  $("#tlist").querySelectorAll("[data-t]").forEach(b => b.onclick = () => {
+    if (ME.guest && Number(b.dataset.r) > 0) return needTopup("游客只能上免费老师的课：注册账号后，所有老师都能上。");
+    if (!ME.free && !ME.guest && ME.balance < Number(b.dataset.r)) return needTopup();
+    startClass(b.dataset.t, b.dataset.n, b.dataset.a);
+  });
+}
+
+// ---------- 教室 ----------
+let C = null;
+const WORKLET = `class Cap extends AudioWorkletProcessor{constructor(){super();this.b=[];this.step=sampleRate/16000;this.pos=0;}
+process(i){const ch=i[0]&&i[0][0];if(ch){while(this.pos<ch.length){this.b.push(ch[Math.floor(this.pos)]);this.pos+=this.step;}this.pos-=ch.length;
+while(this.b.length>=320){const n=this.b.splice(0,320);const o=new Int16Array(320);for(let k=0;k<320;k++){let v=Math.max(-1,Math.min(1,n[k]));o[k]=v<0?v*32768:v*32767;}this.port.postMessage(o.buffer,[o.buffer]);}}return true;}}
+registerProcessor("cap",Cap);`;
+
+function fail(msg){ rlog("失败：" + msg); alert(msg + "。如果是在微信里打开的，点右上角「…」→「在浏览器打开」再试。"); endClass(); }
+
+async function startClass(id, name, avatar, opts = {}){
+  if (C) return;
+  show("room");
+  $("#tav").innerHTML = avatarHTML(avatar); $("#tname").textContent = name; $("#tstate").textContent = "准备上课";
+  $("#bcontent").innerHTML = ""; $("#hist").innerHTML = ""; $("#keys").innerHTML = ""; $("#subs").innerHTML = ""; $("#prep").hidden = false;
+  $("#prepText").textContent = `${name} 正在备课…`;
+  const uid = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  C = {uid, t0: Date.now(), muted: false, sources: [], playAt: 0, items: [], script: null, subs: {}, camOn: false, mode: opts.mode || ""};
+  rlog("点了上课 " + id + (opts.mode ? " " + opts.mode + " " + opts.lang : ""));
+  if (opts.mode === "course") {   // 词根课：接通前先登记，老师按课程表排今天的复习和新词根
+    try {
+      const j = await api("/app/api/course/start", {token: auth.token, uid, lang: opts.lang}), p = j.course || {};
+      $("#prepText").textContent = `${name} 正在备课：` + (p.due ? `先复习 ${p.due} 个词，` : "") +
+        (p.idx < p.total ? `再学第 ${p.idx + 1} 个词根` : "今天以复习为主");
+    } catch (e) { rlog("词根课登记失败：" + e.message); alert("没能开始词根课：" + e.message); return endClass(); }
+  }
+  try { C.ctx = new (window.AudioContext || window.webkitAudioContext)(); C.ctx.resume(); }
+  catch (e) { return fail("浏览器不支持网页通话：" + e.message); }
+  // 老师的声音：总线 → 分析器（小窗里的形象跟着动）→ 稍微延后一点出喇叭（3D 口型算出来正好对上）
+  C.bus = C.ctx.createGain(); C.an = C.ctx.createAnalyser(); C.an.fftSize = 512; C.bus.connect(C.an);
+  const dl = C.ctx.createDelay(1); dl.delayTime.value = 0.08; C.an.connect(dl); dl.connect(C.ctx.destination);
+  const tinfo = (ME.counselors || []).find(t => t.id === id) || {};
+  C.teacher = {name, avatar: tinfo.avatar || avatar, gender: tinfo.gender || "女", avatar3d: tinfo.avatar3d || "",
+               videos: tinfo.videos || []};
+  setTV(TV_ON); requestAnimationFrame(animate);
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error("这个浏览器不让网页用麦克风，请用 Safari 或 Chrome 打开");
+    C.stream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true}});
+  } catch (e) { return fail("拿不到麦克风：" + (e.message || e.name)); }
+  try {
+    await C.ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET], {type: "application/javascript"})));
+  } catch (e) { return fail("音频初始化失败：" + e.message); }
+  const src = C.ctx.createMediaStreamSource(C.stream);
+  C.node = new AudioWorkletNode(C.ctx, "cap"); src.connect(C.node);
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  const wsBase = BASE ? BASE.replace(/^http/, "ws") : `${proto}://${location.host}`;
+  C.ev = new WebSocket(`${wsBase}/app/events?uid=${uid}`);
+  C.ev.onmessage = e => onEvent(JSON.parse(e.data));
+  await new Promise(r => { C.ev.onopen = r; setTimeout(r, 1500); });
+  const q = new URLSearchParams({token: auth.token, phone: auth.phone, uid, counselor: id});
+  C.ws = new WebSocket(`${wsBase}/app/ws?${q}`);
+  C.ws.binaryType = "arraybuffer";
+  C.ws.onopen = () => rlog("课堂通道连上了");
+  C.node.port.onmessage = e => { if (C && C.ws && C.ws.readyState === 1) C.ws.send(C.muted ? new ArrayBuffer(640) : e.data); };
+  C.ws.onmessage = e => {
+    if (typeof e.data === "string") { const m = JSON.parse(e.data);
+      if (m.type === "clear") stopPlayback();
+      else if (m.type === "error") { endClass(); if (m.topup) needTopup(m.text); else alert(m.text); }
+      else if (m.type === "end") setTimeout(endClass, 600);
+      return; }
+    play(e.data);
+  };
+  C.ws.onclose = () => setTimeout(endClass, 500);
+  C.timer = setInterval(() => { if (C) $("#ttime").textContent = mmss((Date.now() - C.t0) / 1000); }, 500);
+}
+function send(o){ if (C && C.ws && C.ws.readyState === 1) C.ws.send(JSON.stringify(o)); }
+function play(buf){
+  const i16 = new Int16Array(buf), f = new Float32Array(i16.length);
+  for (let k = 0; k < i16.length; k++) f[k] = i16[k] / 32768;
+  if (!C.heard) { C.heard = 1; rlog("收到老师的声音，音频状态 " + C.ctx.state); if (C.ctx.state !== "running") C.ctx.resume(); }
+  const ab = C.ctx.createBuffer(1, f.length, 16000); ab.copyToChannel(f, 0);
+  const s = C.ctx.createBufferSource(); s.buffer = ab; s.connect(C.bus || C.ctx.destination);
+  const now = C.ctx.currentTime; if (C.playAt < now + 0.05) C.playAt = now + 0.08;
+  s.start(C.playAt); C.playAt += ab.duration; C.sources.push(s);
+  s.onended = () => { C && (C.sources = C.sources.filter(x => x !== s)); };
+  $("#tav").classList.add("talk"); clearTimeout(C.pt); C.pt = setTimeout(() => $("#tav").classList.remove("talk"), 350);
+}
+function stopPlayback(){ if (!C) return; C.sources.forEach(s => { try { s.stop(); } catch (e) {} }); C.sources = []; C.playAt = 0; }
+
+// ---------- 老师的视频小窗（数字人） ----------
+// 有自己的 / 可商用的 3D 模型（后台「编辑老师」里上传的 .glb，或 CC0 的 mpfb）就用 3D 人物，嘴型跟着声音动；
+// 没有就画一个会眨眼、嘴跟声音张合的卡通头像（按名字固定长相）。TalkingHead 自带的示例模型只能非商用，收费的课不用。
+let TV_ON = true; try { TV_ON = localStorage.getItem("tu_tv") !== "0"; } catch (e) {}
+let M3P = null;
+function hashStr(s){ let h = 7; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) | 0; return Math.abs(h); }
+function avatarSVG(name, gender){
+  const h = hashStr(name || "老师");
+  const skin = ["#f6d7c3", "#f1c9ae", "#eac0a0", "#f8dccb", "#d9a98a"][h % 5];
+  const hair = ["#2b211c", "#3a2a22", "#1d1a19", "#4a3426", "#a8743f", "#d9b36c"][(h >> 2) % 6];
+  const cloth = ["#3b5bdb", "#4f6d8a", "#6b8f71", "#8a6aa8", "#c08a3e", "#3f5f6f"][(h >> 4) % 6];
+  const bg = ["#e7ecff", "#dfe8ef", "#e4eee2", "#ece4f2", "#f4ead8"][(h >> 6) % 5];
+  const female = gender !== "男";
+  const back = female ? `<path d="M54 96 Q46 38 100 32 Q154 38 146 96 L152 162 Q100 174 48 162 Z" fill="${hair}"/>` : "";
+  const top = female
+    ? `<path d="M60 90 Q60 44 100 42 Q140 44 140 90 Q128 64 102 62 Q76 66 60 90 Z" fill="${hair}"/>`
+    : `<path d="M62 88 Q58 44 100 40 Q142 44 138 88 Q134 62 112 60 Q90 70 70 64 Q64 74 62 88 Z" fill="${hair}"/>`;
+  return `<svg viewBox="0 10 200 230" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+    <rect y="0" width="200" height="240" fill="${bg}"/>${back}
+    <path d="M24 240 Q30 150 100 146 Q170 150 176 240 Z" fill="${cloth}"/>
+    <rect x="88" y="118" width="24" height="32" rx="10" fill="${skin}"/>
+    <ellipse cx="100" cy="94" rx="38" ry="44" fill="${skin}"/>${top}
+    <g class="eyes"><ellipse cx="85" cy="96" rx="4" ry="5" fill="#2a211d"/><ellipse cx="115" cy="96" rx="4" ry="5" fill="#2a211d"/></g>
+    <path d="M77 85 Q85 81 92 84 M108 84 Q115 81 123 85" stroke="${hair}" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <circle cx="77" cy="110" r="6" fill="#e9a6a0" opacity=".35"/><circle cx="123" cy="110" r="6" fill="#e9a6a0" opacity=".35"/>
+    <ellipse class="mouth" cx="100" cy="118" rx="8" ry="2" fill="#a8473f"/></svg>`;
+}
+function placeTV(){ const t = document.querySelector("#room .top"); if (t) $("#tvid").style.top = (t.getBoundingClientRect().bottom + 8) + "px"; }
+let F2P = null;
+const PHOTO_ANIM = false;   // 照片数字人（嘴型、眨眼）先不用：上课先放静态照片；以后换成循环播放的视频
+function dropPF(){ if (C && C.pf) { C.pf.dispose(); C.pf = null; } }
+function playLoops(c, list){   // 老师有循环视频：随机挑一段播，播完再随机换一段（静音，声音走课堂语音）
+  const v = document.createElement("video");
+  v.muted = true; v.playsInline = true; v.autoplay = true; v.setAttribute("playsinline", "");
+  v.style.cssText = "position:absolute;inset:0;width:100%;height:100%;object-fit:cover";
+  let last = -1;
+  const next = () => {
+    if (C !== c || !TV_ON) return;
+    let k = Math.floor(Math.random() * list.length); if (list.length > 1 && k === last) k = (k + 1) % list.length;
+    last = k; v.src = U(list[k]); v.play().catch(() => {});
+  };
+  v.onended = next; v.onerror = () => { rlog("老师视频播不了：" + v.src); v.remove(); };
+  $("#tv2d").append(v); next();
+}
+function renderTV(){   // 有循环视频就随机播；有照片放静态照片；都没有就卡通头像
+  if (!C || !C.teacher) return;
+  dropPF();
+  const t = C.teacher, img = t.avatar && /^(https?:|\/app\/avatar\/)/.test(t.avatar);
+  $("#tv2d").innerHTML = img ? `<img src="${esc(U(t.avatar))}" alt="">` : avatarSVG(t.name, t.gender);
+  C.mouth = $("#tv2d .mouth"); C.eyes = $("#tv2d .eyes");
+  $("#tvname").textContent = t.name;
+  if ((t.videos || []).length) { playLoops(C, t.videos); return; }
+  if (img && PHOTO_ANIM) {
+    const c = C, want = t.avatar;
+    F2P = F2P || import(ASSET + "face2d.js");
+    F2P.then(mod => mod.createPhotoFace($("#tv2d"), U(want)).then(pf => {
+      if (C !== c || !TV_ON || c.teacher.avatar !== want) { pf.dispose(); return; }
+      c.pf = pf; c.f2 = mod; c.mouth = c.eyes = null;
+    })).catch(e => { rlog("照片数字人没起来，用静态照片：" + (e.message || e)); });
+  }
+}
+function own3D(spec){ return spec === "mpfb" || /\.glb(\?|$)/i.test(spec || ""); }
+async function load3D(){
+  if (!C || !TV_ON || !C.teacher || !own3D(C.teacher.avatar3d) || C.h3 || C.h3busy) return;
+  const c = C; c.h3busy = true;
+  try {
+    M3P = M3P || import(ASSET + "head3d.js");
+    const mod = await M3P, model = mod.resolveModel(c.teacher.avatar3d, c.teacher.gender);
+    if (!model || C !== c || !TV_ON) return;
+    $("#tvload").hidden = false; $("#tvload").textContent = "形象加载中…";
+    const h = await mod.createHead($("#tv3d"), c.ctx, c.bus, {url: model.url, body: model.body, view: "head",
+      onprogress: ev => { if (ev && ev.lengthComputable && C === c) $("#tvload").textContent = `形象加载中 ${Math.min(99, Math.round(100 * ev.loaded / ev.total))}%`; }});
+    if (C !== c || !TV_ON) { h.dispose(); return; }
+    c.h3 = h; c.m3 = mod; $("#tv3d").hidden = false; $("#tv2d").hidden = true; $("#tvload").hidden = true;
+    rlog("3D 老师形象加载好了");
+  } catch (e) {
+    rlog("3D 老师形象加载失败：" + (e.message || e)); $("#tvload").hidden = true;
+  } finally { c.h3busy = false; }
+}
+function drop3D(){ if (C && C.h3) { C.h3.dispose(); C.h3 = null; } $("#tv3d").hidden = true; $("#tv2d").hidden = false; }
+function setTV(on){
+  TV_ON = on; try { localStorage.setItem("tu_tv", on ? "1" : "0"); } catch (e) {}
+  $("#tvBtn").classList.toggle("on", on);
+  if (!C) return;
+  $("#tvid").hidden = !on;
+  if (on) { renderTV(); placeTV(); load3D(); } else { drop3D(); dropPF(); }
+}
+function animate(){   // 老师说话时：卡通头像的嘴跟着声音张合、轻轻放大；隔几秒眨一下眼
+  if (!C || !C.an) return;
+  if (TV_ON && !C.h3) {
+    const d = C.anBuf || (C.anBuf = new Uint8Array(C.an.fftSize));
+    C.an.getByteTimeDomainData(d);
+    let sum = 0; for (let k = 0; k < d.length; k++) { const v = (d[k] - 128) / 128; sum += v * v; }
+    C.lv = (C.lv || 0) * 0.55 + Math.min(1, Math.sqrt(sum / d.length) * 5) * 0.45;
+    if (C.pf) C.pf.level(C.lv);   // 照片数字人自己眨眼、呼吸，这里只喂音量
+    if (C.mouth) { C.mouth.setAttribute("ry", (2 + C.lv * 9).toFixed(1)); C.mouth.setAttribute("rx", (8 + C.lv * 2).toFixed(1)); }
+    const el = $("#tv2d > svg"); if (el) el.style.transform = `scale(${(1 + C.lv * 0.03).toFixed(3)})`;   // 照片和视频不晃
+    const now = performance.now();
+    if (C.eyes && now > (C.blinkAt || 0)) {
+      C.eyes.setAttribute("transform", "translate(0,96) scale(1,0.12) translate(0,-96)");
+      setTimeout(() => C && C.eyes && C.eyes.removeAttribute("transform"), 130);
+      C.blinkAt = now + 2500 + Math.random() * 3500;
+    }
+  }
+  requestAnimationFrame(animate);
+}
+$("#tvX").onclick = () => setTV(false);
+$("#tvBtn").onclick = () => setTV(!TV_ON);
+window.addEventListener("resize", () => C && TV_ON && placeTV());
+
+function onEvent(m){
+  if (C && m.call) C.callId = m.call;
+  if (m.kind === "lesson" && m.state === "ended") { showSummary(m); setTimeout(loadStudy, 500); return; }   // 下课后才到：教室已关也要显示
+  if (!C) return;
+  if (m.kind === "lesson"){
+    if (m.state === "started") { $("#prep").hidden = true; $("#tstate").textContent = C.mode === "course" ? "词根课 · 上课中" : "上课中"; }
+    if (m.state === "feedback") {   // 课后反馈：计费已经停了
+      C.feedback = true; $("#tstate").textContent = "课后反馈 · 不计费";
+      addItem({type: "slide", title: "💬 课后反馈（这段不计费）", points: ["这节课哪里讲得好、哪里想改进？", "节奏快慢、例句多少、想多练什么，直接跟老师说", "下课后也可以在小结里打分、留言"]});
+    }
+    if (m.state === "ended") showSummary(m);
+  } else if (m.kind === "board") { addItem(m.item); }
+  else if (m.kind === "subtitle") {
+    const id = m.id || "x"; C.subs[id] = {role: m.role, text: m.text};
+    if (m.role !== "user" && m.text) C.lastA = m.text;
+    const last = Object.values(C.subs).slice(-2);
+    const sub = t => { const m = /^〔([^〕]{1,6})〕/.exec(t || ""); return m ? `<span class="lid">${esc(m[1])}</span>${esc(t.slice(m[0].length))}` : esc(t); };   // 〔日语〕= 系统听出的语种
+    $("#subs").innerHTML = last.map(x => `<div class="${x.role === "user" ? "" : "a"}">${x.role === "user" ? "你：" : ""}${sub(x.text)}</div>`).join("");
+  } else if (m.kind === "call_state" && m.counselor && C.teacher) {   // 后台改了老师的形象：小窗跟着换
+    const t = C.teacher, av = m.avatar || t.avatar, a3 = m.avatar3d || "";
+    if (av !== t.avatar || (m.gender && m.gender !== t.gender) || a3 !== t.avatar3d) {
+      Object.assign(t, {avatar: av, gender: m.gender || t.gender, avatar3d: a3});
+      if (TV_ON) { drop3D(); renderTV(); load3D(); }   // renderTV 会先收掉旧的照片数字人
+    }
+  } else if (m.kind === "mood") {
+    if (C.h3 && C.m3) C.h3.setMood(C.m3.moodOf(m.me));
+    if (C.pf && C.f2) C.pf.mood(C.f2.moodOf(m.me));
+  }
+  else if (m.kind === "call_ended") { setTimeout(endClass, 1500); }
+}
+
+function hl(word, forms){
+  let out = esc(word);
+  for (const f of (forms || []).sort((a, b) => b.length - a.length)) {
+    if (f.length < 2) continue;
+    const i = word.toLowerCase().indexOf(f.toLowerCase());
+    if (i >= 0) return esc(word.slice(0, i)) + "<mark>" + esc(word.slice(i, i + f.length)) + "</mark>" + esc(word.slice(i + f.length));
+  }
+  return out;
+}
+function dialog(it){   // A：B：一句一行；学员的台词底色不同；有翻译就小字放在下面
+  return it.lines.map((l, i) => `<div class="line ${l.who === "B" ? "me" : ""}" data-li="${i + 1}"><b>${esc(l.who)}：${esc((it.roles || {})[l.who] || "")}${l.who === "B" ? "（你）" : ""}</b>${fw(esc(l.text))}${l.tr ? `<small style="display:block;color:var(--muted)">${esc(l.tr)}</small>` : ""}</div>`).join("");
+}
+// 注音（tutor/phonetics.py）：日语假名 · 罗马音，韩语罗马字，其他语种国际音标。讲义先出，注音晚到了按 data-ph 补上
+let PH = {};
+function phText(p, w){
+  if (!p) return "";
+  if (p.ipa) return `/${p.ipa}/`;
+  if (p.rom) return p.rom;
+  return [String(w).includes(`（${p.kana}）`) || w === p.kana ? "" : p.kana, p.romaji].filter(Boolean).join(" · ");
+}
+const phon = (w, big) => `<i class="ph${big ? " big" : ""}" data-ph="${esc(w)}">${esc(phText(PH[w], w))}</i>`;
+const fw = h => `<span data-noconv>${h}</span>`;   // 外语原文不转繁体（日语的「学校」不能变成「學校」）
+function render(it){
+  if (it.type === "root") return `<div class="muted">词根</div><div class="rootform">${fw(esc(it.form))}</div><div><b>${esc(it.meaning)}</b> <span class="muted">${esc(it.meaning_en || "")}</span></div>
+    ${it.story ? `<div class="story">${esc(it.story)}</div>` : ""}<div class="muted">同根词 ${it.total} 个</div>
+    <div class="fam">${it.words.map(w => `<div>${fw(hl(w[0], it.highlight))}${phon(w[0])}<small>${esc(w[1])}</small></div>`).join("")}</div>`;
+  if (it.type === "build") return `<div class="muted">拆词</div><div class="build">${it.pieces.map((p, i) => `<span class="piece ${i === 0 || p.length > 3 ? "r" : ""}" style="animation-delay:${i * .45}s">${fw(esc(p))}</span>`).join('<span style="align-self:center;font-size:24px">+</span>')}</div>
+    <div class="merged" style="animation-delay:${it.pieces.length * .45 + .2}s">${fw(esc(it.word))}${phon(it.word, true)}</div><div class="merged muted" style="font-size:18px;animation-delay:${it.pieces.length * .45 + .5}s">${esc(it.meaning)}</div>`;
+  if (it.type === "slide") return `<h2>${esc(it.title)}</h2><ul>${it.points.map(p => `<li>${esc(p)}</li>`).join("")}</ul>`;
+  if (it.type === "scene") return `<div class="sceneicon">${esc(it.icon)}</div><h2 style="text-align:center">${esc(it.title)}</h2><div class="chips" style="justify-content:center">${it.vocab.map(v => `<span class="chip">${esc(v)}</span>`).join("")}</div>` +
+    (it.lines && it.lines.length ? `<div class="muted" style="margin-top:12px">情景对话 · 你演 ${esc((it.roles || {}).B || "B")}，老师演 ${esc((it.roles || {}).A || "A")}</div>` + dialog(it) : "");
+  if (it.type === "script") return `<div class="muted">配音台本 · 你演 ${esc(it.roles.B || "B")}，老师演 ${esc(it.roles.A || "A")}</div><h2>🎬 ${esc(it.title)}</h2>` +
+    (it.note ? `<div class="muted" style="margin-bottom:6px">${esc(it.note)}</div>` : "") + dialog(it);
+  if (it.type === "quiz") return `<div class="muted">小测验</div><h2>${esc(it.question)}</h2><div class="opts">${it.options.map((o, i) => `<button data-o="${esc(o)}">${"ABCDE"[i]}. ${esc(o)}</button>`).join("")}</div>`;
+  if (it.type === "key") return `<div class="muted">重点</div><div class="rootform" style="color:var(--hot)">${fw(esc(it.word))}</div>${phon(it.word, true)}<div style="font-size:18px">${esc(it.meaning)}</div>`;
+  if (it.type === "review") {   // 复习卡：先只看单词、自己想意思；点一下或老师判完才露出意思
+    const shown = it.open || it.ok != null;
+    return `<div class="muted">复习 · 先想一想它的意思，说给老师听</div>
+      <div class="rcard ${it.ok == null ? "" : it.ok ? "ok" : "bad"}" data-rv><div class="w">${fw(esc(it.word))}</div>${phon(it.word, true)}
+      <div class="m ${shown ? "" : "hide"}">${esc(it.meaning || "")}</div>
+      <div class="note" style="${it.ok == null ? "color:var(--muted)" : it.ok ? "color:var(--ok)" : "color:var(--bad)"}">${it.ok == null ? (shown ? "" : "点一下看意思") : it.ok ? "✓ 记住了，下次隔久一点再考" : "✗ 没关系，明天再复习一次"}</div></div>`;
+  }
+  if (it.type === "readalong") {   // 跟读：先放原句；系统核对完逐词上色（绿=清楚 橙=不太清楚 红=没读出来）
+    const r = it.result, lv = r && r.level;
+    const words = r ? r.words.map(([w, st]) => `<span class="${esc(st)}">${esc(w)}</span>`).join(r.sep ?? " ") : esc(it.text);
+    const msg = !r ? "🎧 听老师读一遍，然后大声跟读" : lv === "good" ? "✓ 读得很好！" : lv === "close" ? "👍 基本读对了，橙色的再练练"
+      : lv === "zh" ? "听起来是用中文读音念的，试试外语的读法" : "再试一次：红色的还没读出来";
+    return `<div class="muted">跟读</div><div class="ra">${fw(r && lv === "zh" ? esc(it.text) : words)}</div>${phon(it.text, true)}${it.tr ? `<div class="ratr">${esc(it.tr)}</div>` : ""}
+      <div class="rares" style="color:${!r ? "var(--muted)" : lv === "good" ? "var(--ok)" : lv === "close" || lv === "zh" ? "var(--hot)" : "var(--bad)"}">${msg}</div>
+      ${r ? `<div class="rasaid">听到你读：${esc(r.said)}</div>` : ""}`;
+  }
+  if (it.type === "sentence") {   // 造句：学员说的 → 老师改好的 + 翻译
+    const same = !it.better || it.better.trim().toLowerCase() === (it.said || "").trim().toLowerCase();
+    return `<div class="muted">造句 · 用「${esc(it.word)}」</div><div class="sent">
+      <div class="said">你说：<span class="${same ? "" : "x"}" data-noconv>${esc(it.said)}</span></div>
+      ${same ? `<div class="better" style="color:var(--ok)">✓ 说得很好</div>${phon(it.said)}` : `<div class="better">${fw(hl(it.better, [it.word]))}</div>${phon(it.better)}`}
+      ${it.tr ? `<div class="tr">${esc(it.tr)}</div>` : ""}</div>`;
+  }
+  return "";
+}
+const HIST = {root: "词根 ", build: "拆词 ", slide: "", scene: "情景 ", script: "台本 ", quiz: "测验", key: "重点 ", review: "复习 ", sentence: "造句 ", readalong: "跟读 "};
+const mark = x => x.result ? {good: " ✓", close: " ~", retry: " ✗", zh: " ✗"}[x.result.level] || "" : x.ok == null ? "" : x.ok ? " ✓" : " ✗";
+function renderHist(){
+  $("#hist").innerHTML = C.items.map((x, i) => `<button data-h="${i}">${esc(HIST[x.type] || "")}${x.title ? esc(x.title.slice(0, 24)) : fw(esc((x.form || x.word || x.text || "").slice(0, 24)))}${mark(x)}</button>`).join("");
+  $("#hist").querySelectorAll("[data-h]").forEach(b => b.onclick = () => showItem(Number(b.dataset.h)));
+}
+function addItem(it){
+  if (it.ph) Object.assign(PH, it.ph);
+  if (it.type === "phonetics") {   // 注音晚到了：屏上已有的词补上，不重画（拆词动画不重放）
+    Object.assign(PH, it.map || {});
+    document.querySelectorAll("#bcontent [data-ph]").forEach(el => { const p = (it.map || {})[el.dataset.ph]; if (p) el.textContent = phText(p, el.dataset.ph); });
+    return;
+  }
+  $("#prep").hidden = true;
+  if (it.type === "clear") { C.items = []; $("#bcontent").innerHTML = ""; $("#hist").innerHTML = ""; return; }
+  if (it.type === "line") { document.querySelectorAll(".line").forEach(el => el.classList.toggle("cur", Number(el.dataset.li) === it.index));
+    const cur = document.querySelector(".line.cur"); if (cur) cur.scrollIntoView({block: "nearest", behavior: "smooth"}); return; }
+  if (it.type === "grade") {   // 老师判了复习结果：标到那张复习卡上（没有卡就补一张）
+    const w = String(it.word || "").toLowerCase();
+    let i = -1; for (let k = C.items.length - 1; k >= 0; k--) if (C.items[k].type === "review" && String(C.items[k].word).toLowerCase() === w) { i = k; break; }
+    if (i < 0) { C.items.push({type: "review", word: it.word, meaning: it.meaning, ok: it.ok}); i = C.items.length - 1; }
+    else Object.assign(C.items[i], {ok: it.ok, meaning: C.items[i].meaning || it.meaning});
+    renderHist(); if (C.cur === i || C.items.length - 1 === i) showItem(i);
+    return;
+  }
+  if (it.type === "read_result") {   // 跟读核对结果：标到最近那张跟读卡上（再读一遍就覆盖）
+    const ras = C.items.map((x, k) => x.type === "readalong" ? k : -1).filter(k => k >= 0);
+    let i = ras.reverse().find(k => C.items[k].text === it.ref) ?? (ras.length ? ras[0] : -1);
+    if (i < 0) { C.items.push({type: "readalong", text: it.ref, tr: ""}); i = C.items.length - 1; }
+    C.items[i].result = it; renderHist(); if (C.cur === i || C.items.length - 1 === i) showItem(i);
+    return;
+  }
+  if (it.type === "key") { const k = document.createElement("span"); k.className = "k"; k.innerHTML = `${fw(esc(it.word))} ${esc(it.meaning)}`; $("#keys").append(k); }
+  C.items.push(it); showItem(C.items.length - 1);
+  renderHist();
+}
+function showItem(i){
+  const it = C.items[i]; C.cur = i; $("#bcontent").innerHTML = render(it);
+  $("#bcontent").querySelectorAll("[data-o]").forEach(b => b.onclick = () => { send({type: "text", text: "我选：" + b.dataset.o}); b.style.outline = "3px solid var(--accent)"; });
+  const rv = $("#bcontent [data-rv]"); if (rv) rv.onclick = () => { it.open = !it.open || it.ok != null; showItem(i); };
+}
+function showSummary(m){
+  const p = m.progress || {};
+  const cost = m.billed_s == null ? "" : `<p class="muted" style="margin-top:-6px">本节 ${mmss(m.billed_s)} · ${m.free ? "免费" : `扣 ¥${yuan(m.charged)} · 剩余余额 ¥${yuan(m.balance)}`}</p>`;
+  const c = m.course, course = c ? `<p style="margin:0 0 10px">📚 ${esc((LANG[c.lang] || c.name).replace(/^\S+ /, ""))}词根课：${c.idx >= c.total ? "词根全部学完" : `已学 ${c.idx} / ${c.total} 个词根`}
+    · 记牢 ${c.solid}/${c.words} 个词${c.due ? ` · 还有 ${c.due} 个待复习` : ""}</p>` : "";
+  const ask = m.call && m.billed_s > 0 ? `<div class="muted" style="margin-top:6px;text-align:center">给这节课打个分，老师会照着改进（不计费）</div>
+    <div class="stars" id="stars">${[1, 2, 3, 4, 5].map(i => `<button data-s="${i}" aria-label="${i} 星">★</button>`).join("")}</div>
+    <div><textarea id="sumCmt" rows="2" maxlength="300" placeholder="想让老师怎么改？比如：讲慢一点、多些例句、多练口语…"
+      style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:10px;font:inherit;font-size:15px;background:var(--bg);color:var(--ink);resize:vertical"></textarea></div>` : "";
+  $("#sumCard").innerHTML = `<h2 style="margin-top:0">下课啦 🎉</h2><p>连续上课 <b>🔥${p.streak || 1}</b> 天 · 一共 ${p.lessons || 1} 节课</p>${cost}${course}
+    <div class="muted">今天的重点</div><div style="margin:6px 0 12px">${(m.keys || []).map(k => `<span class="tag">${esc(k.word)} ${esc(k.meaning)}</span>`).join("") || "（这节没标重点）"}</div>
+    <p class="muted">都已经收进生词本，到期了老师会带你复习。明天同一时间再来，连续天数就能续上。</p>${ask}<button class="main" id="sumOk" style="margin-top:10px">好</button>`;
+  let stars = 0;
+  $("#sumCard").querySelectorAll("[data-s]").forEach(b => b.onclick = () => {
+    stars = Number(b.dataset.s);
+    $("#sumCard").querySelectorAll("[data-s]").forEach(x => x.classList.toggle("on", Number(x.dataset.s) <= stars));
+    $("#sumOk").textContent = "提交";
+  });
+  if ($("#sumCmt")) $("#sumCmt").oninput = () => $("#sumOk").textContent = "提交";
+  $("#summary").hidden = false;
+  $("#sumOk").onclick = async () => {
+    const cmt = ($("#sumCmt") && $("#sumCmt").value.trim()) || "";
+    $("#summary").hidden = true;
+    if (!m.call || (!stars && !cmt)) return;
+    try { await api("/app/api/feedback", {token: auth.token, call: m.call, rating: stars || null, comment: cmt, lang: m.lang, mode: m.mode}); banner("谢谢你的意见！老师下节课会照着调整。", true); }
+    catch (e) { rlog("评价没交上：" + e.message); }
+  };
+}
+
+async function toggleCam(){
+  if (!C) return;
+  if (C.camOn) {
+    C.camOn = false; clearInterval(C.camTimer); C.cam && C.cam.getTracks().forEach(t => t.stop()); $("#cam").hidden = true; $("#camBtn").classList.remove("on");
+    send({type: "camera", on: false}); setTimeout(placeTV, 50); return;
+  }
+  try { C.cam = await navigator.mediaDevices.getUserMedia({video: {facingMode: "user", width: 320, height: 240}}); }
+  catch (e) { alert("打不开摄像头：" + (e.message || e.name)); return; }
+  $("#cam").srcObject = C.cam; $("#cam").hidden = false; C.camOn = true; $("#camBtn").classList.add("on");
+  send({type: "camera", on: true}); setTimeout(placeTV, 50);
+  const cv = document.createElement("canvas"); cv.width = 320; cv.height = 240;
+  const snap = () => { try { cv.getContext("2d").drawImage($("#cam"), 0, 0, 320, 240); send({type: "frame", jpeg: cv.toDataURL("image/jpeg", 0.6).split(",")[1]}); } catch (e) {} };
+  setTimeout(snap, 1500); C.camTimer = setInterval(snap, 10000);
+}
+async function endClass(){
+  if (!C) return; const c = C; C = null;
+  clearInterval(c.timer); clearInterval(c.camTimer);
+  try { c.ws && c.ws.close(); } catch (e) {}
+  setTimeout(() => { try { c.ev && c.ev.close(); } catch (e) {} }, 2500);   // 留一会儿收下课小结
+  try { c.stream && c.stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+  try { c.cam && c.cam.getTracks().forEach(t => t.stop()); } catch (e) {}
+  try { c.h3 && c.h3.dispose(); } catch (e) {}
+  try { c.pf && c.pf.dispose(); } catch (e) {}
+  $("#tvid").hidden = true; $("#tv3d").hidden = true; $("#tv2d").hidden = false; $("#tv2d").innerHTML = "";
+  try { c.ctx && c.ctx.close(); } catch (e) {}
+  $("#cam").hidden = true; $("#camBtn").classList.remove("on");
+  show("home"); setTimeout(() => { loadStudy(); refreshMe(); }, 2000);
+}
+$("#hang").onclick = endClass;
+$("#camBtn").onclick = toggleCam;
+$("#mute").onclick = () => { if (!C) return; C.muted = !C.muted; $("#mute").classList.toggle("on", C.muted); $("#mute").textContent = C.muted ? "已静音" : "静音"; };
+window.addEventListener("unhandledrejection", e => rlog("页面报错：" + (e.reason && e.reason.message || e.reason)));
+// ---------- 举报 AI 内容（Google Play 对 AI 生成内容的要求：App 里能举报） ----------
+const WHY = ["内容不当", "冒犯 / 歧视", "色情低俗", "错误信息", "其他"];
+let repWhy = "";
+$("#repBtn").onclick = () => {
+  repWhy = ""; $("#repNote").value = "";
+  $("#repText").textContent = (C && C.lastA) || "（还没有说话）";
+  $("#repWhy").innerHTML = WHY.map(w => `<span class="chip" data-w="${esc(w)}">${esc(w)}</span>`).join("");
+  $("#repWhy").querySelectorAll("[data-w]").forEach(c => c.onclick = () => {
+    repWhy = c.dataset.w; $("#repWhy").querySelectorAll(".chip").forEach(x => x.classList.toggle("on", x === c));
+  });
+  $("#report").hidden = false;
+};
+$("#repX").onclick = () => $("#report").hidden = true;
+$("#repGo").onclick = async () => {
+  if (!repWhy) return alert("请选一个原因");
+  try {
+    await api("/app/api/report", {token: auth.token, call: (C && C.callId) || "", text: $("#repText").textContent, reason: repWhy, note: $("#repNote").value});
+    $("#report").hidden = true; banner("已收到举报，谢谢！我们会检查这段内容。", true);
+  } catch (e) { alert(e.message); }
+};
+findBackend().then(() => { loadShowcase(); boot(); });
+</script>
+</body>
+</html>

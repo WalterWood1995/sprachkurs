@@ -417,7 +417,7 @@ async function api(path, body){
 }
 function save(){ try { localStorage.setItem("tu_auth", JSON.stringify(auth)); } catch (e) {} }
 // 老师照片（thispersondoesnotexist 的测试图）商用授权不清：先全用卡通头像。换成有授权的照片后把 CARTOON 改成 false
-const CARTOON = true;
+const CARTOON = false;   // 1006 吴总选：先用照片（仅内测，授权问题见上）
 const isPhoto = a => typeof a === "string" && /^(https?:|\/app\/avatar\/)/.test(a);
 function avatarHTML(t){
   t = typeof t === "string" ? {avatar: t} : (t || {});
@@ -905,7 +905,7 @@ function avatarSVG(t, gender){
 }
 function placeTV(){ const t = document.querySelector("#room .top"); if (t) $("#tvid").style.top = (t.getBoundingClientRect().bottom + 8) + "px"; }
 let F2P = null;
-const PHOTO_ANIM = false;   // 照片数字人（嘴型、眨眼）先不用：上课先放静态照片；以后换成循环播放的视频
+const PHOTO_ANIM = true;    // 1006 打开：照片按声音张嘴、眨眼（hotline/static/face2d.js，面部点 avatars/T##.json 已全部预算好）
 function dropPF(){ if (C && C.pf) { C.pf.dispose(); C.pf = null; } }
 function playLoops(c, list){   // 老师有循环视频：随机挑一段播，播完再随机换一段（静音，声音走课堂语音）
   const v = document.createElement("video");
